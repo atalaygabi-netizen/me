@@ -18,6 +18,7 @@
             --weekday-row-padding: 10px;
             --weekday-font-size: 1.1rem;
             --shabbat-font-size: 1.1rem;
+            --shabbat-card-border: #e2e8f0;
 
             --ticker-bg: #1a365d;
             --ticker-color: #ffffff;
@@ -111,7 +112,7 @@
             border-radius: 12px;
             padding: 20px;
             box-shadow: 0 10px 25px rgba(0,0,0,0.08);
-            border: 2px solid #e2e8f0;
+            border: 2px solid var(--shabbat-card-border);
             position: relative;
         }
 
@@ -247,7 +248,7 @@
             margin-bottom: 6px;
             cursor: grab;
         }
-
+        
         .img-thumb-row:active {
             cursor: grabbing;
         }
@@ -285,7 +286,7 @@
             <span id="topBarTitleText">לוח עדכונים לבית הכנסת</span>
         </div>
         <div>
-            <button onclick="requestPassword()">לוח בקרה ⚙️</button>
+            <button onclick="requestControlPanelPassword()">לוח בקרה ⚙️</button>
         </div>
     </div>
 
@@ -295,18 +296,14 @@
         <div class="ticker-track" id="tickerTrackElement"></div>
     </div>
 
-    <!-- מודל בקשת סיסמה ללוח בקרה -->
+    <!-- מודל סיסמה ללוח בקרה -->
     <div class="modal" id="passwordModal" onclick="if(event.target === this) closeModal('passwordModal')">
-        <div class="modal-content" style="width: 400px; text-align: center;" onclick="event.stopPropagation()">
-            <h3 style="color: var(--primary-color); margin-bottom: 15px; border-bottom: none;">כניסה ללוח בקרה 🔐</h3>
-            <p style="font-size: 0.9rem; color: #4a5568; margin-bottom: 15px;">נא להקליד את קוד הגישה </p>
+        <div class="modal-content" style="width: 400px; text-align: center;">
+            <h2 style="color: var(--primary-color); margin-bottom: 15px;">הזן סיסמת מנהל 🔐</h2>
             <div class="form-group">
-                <input type="password" id="input-admin-password" placeholder="הכנס קוד גישה..." style="text-align: center; font-size: 1.2rem; letter-spacing: 2px;" onkeydown="if(event.key==='Enter') checkAdminPassword()">
+                <input type="password" id="input-admin-password" placeholder="הכנס סיסמה..." style="text-align: center; font-size: 1.2rem;" onkeydown="if(event.key === 'Enter') verifyPassword()">
             </div>
-            <div style="display: flex; gap: 10px; justify-content: center; margin-top: 20px;">
-                <button class="btn-action" style="background: #2f855a; padding: 8px 20px;" onclick="checkAdminPassword()">כניסה</button>
-                <button class="btn-action" style="background: #e53e3e; padding: 8px 20px;" onclick="closeModal('passwordModal')">ביטול</button>
-            </div>
+            <button class="btn-action" style="background: var(--primary-color); width: 100%; padding: 10px; font-size: 1.1rem;" onclick="verifyPassword()">כניסה</button>
         </div>
     </div>
 
@@ -421,7 +418,11 @@
             <hr style="margin: 20px 0;">
 
             <h3>עריכת זמני השבת והשיעורים</h3>
-            <div class="form-group" style="margin-top: 10px;">
+            <div class="form-group" style="margin-top: 10px; display:flex; align-items:center; gap:10px;">
+                <input type="checkbox" id="check-auto-parasha" style="width:auto;" onchange="updateStateField('autoParasha', this.checked)">
+                <label for="check-auto-parasha" style="margin-bottom:0; cursor:pointer;">עדכן פרשה והפטרה אוטומטית לפי לוח השנה</label>
+            </div>
+            <div class="form-group">
                 <label>פרשת השבוע:</label>
                 <input type="text" id="input-shabbat-parasha" oninput="updateShabbatField('parasha', this.value)">
             </div>
@@ -431,11 +432,15 @@
             </div>
 
             <div style="background: #f8fafc; padding: 12px; border-radius: 6px; margin: 15px 0; border: 1px solid #cbd5e0;">
-                <h4 style="font-size: 0.95rem; color: var(--primary-color); margin-bottom: 10px;">התאמת גודל כתב כרטיסיות שבת</h4>
-                <div style="display:flex; gap:15px; flex-wrap: wrap;">
+                <h4 style="font-size: 0.95rem; color: var(--primary-color); margin-bottom: 10px;">התאמת עיצוב כרטיסיות שבת</h4>
+                <div style="display:flex; gap:15px; flex-wrap: wrap; align-items: center;">
                     <div class="form-group" style="flex:1; min-width: 200px; margin-bottom:0;">
                         <label style="font-size:0.85rem;">גודל כתב כרטיסיות: <span id="shabbat-font-val" style="color:var(--secondary-color);">1.1</span>rem</label>
                         <input type="range" id="range-shabbat-font" min="0.8" max="2.2" step="0.1" value="1.1" oninput="updateShabbatFont(this.value)" style="width:100%; cursor:pointer;">
+                    </div>
+                    <div class="form-group" style="flex:0; min-width: 160px; margin-bottom:0;">
+                        <label style="font-size:0.85rem;">צבע מסגרת כרטיסיות:</label>
+                        <input type="color" id="input-shabbat-border-color" onchange="updateShabbatBorderColor(this.value)" style="height: 38px; padding: 2px; width: 100%;">
                     </div>
                 </div>
             </div>
@@ -455,7 +460,7 @@
             <hr style="margin: 20px 0;">
 
             <h3>ניהול סדר המצגות, הפינות ומסכי התפילות</h3>
-            <p style="font-size: 0.9rem; color: #4a5568; margin-bottom: 12px;">גרור את התיבות למטה כדי לשנות את סדר התצוגה במצגת, וכן גרור את התמונות בתוך התיבה (מוצגת תמונה מקדימה) כדי לשנות את סדר הופעתן.</p>
+            <p style="font-size: 0.9rem; color: #4a5568; margin-bottom: 12px;">גרור את התיבות למטה כדי לשנות את סדר התצוגה במצגת (Drag & Drop).</p>
             
             <div style="display: flex; gap: 10px; margin-bottom: 15px; flex-wrap: wrap;">
                 <button class="btn-action" style="background: #2b6cb0; margin:0;" onclick="addCustomSlide()">+ הוסף פינת תמונות חדשה</button>
@@ -487,6 +492,8 @@
         weekdayRowSpacing: 10,
         weekdayBold: false,
         shabbatFontSize: 1.1,
+        shabbatBorderColor: "#e2e8f0",
+        autoParasha: true,
         cachedThursdayStr: "",
         cachedMinchaTime: "",
         weekdayTitle: "זמני תפילות ביום חול",
@@ -508,8 +515,8 @@
             { name: "ערבית", time: "20:30" }
         ],
         shabbat: {
-            parasha: "פרשת שופטים",
-            haftara: "הפטרה: ישעיהו נ\"א, י\"ב - נ\"ג, י\"ב",
+            parasha: "פרשת כי תצא",
+            haftara: "הפטרה: רני עקרה (ישעיהו נ\"ד)",
             friday: [
                 { time: "19:15", event: "שיר השירים" },
                 { time: "19:25", event: "מנחה + קבלת שבת + שיחת הרב + ערבית" }
@@ -546,7 +553,6 @@
             if (saved) {
                 let parsed = JSON.parse(saved);
                 state = Object.assign({}, state, parsed);
-                if (!state.adminPassword) state.adminPassword = "1234";
                 if (!state.slidesSequence || state.slidesSequence.length === 0) {
                     state.slidesSequence = [
                         { uniqueId: 'w_default', type: 'weekday' },
@@ -567,9 +573,34 @@
 
     function initApp() {
         loadFromLocalStorage();
+        checkAndSetAutoParasha();
         renderBoard();
         startSlideRotation();
         setupKeyboardNavigation();
+    }
+
+    function checkAndSetAutoParasha() {
+        if (!state.autoParasha) return;
+        
+        const now = new Date();
+        const dStr = now.toISOString().split('T')[0];
+        
+        let pName = "פרשת כי תצא";
+        let hName = "הפטרה: רני עקרה (ישעיהו נ\"ד)";
+
+        if (dStr >= "2026-08-23" && dStr <= "2026-08-29") {
+            pName = "פרשת כי תצא";
+            hName = "הפטרה: רני עקרה (ישעיהו נ\"ד)";
+        } else if (dStr >= "2026-08-30" && dStr <= "2026-09-05") {
+            pName = "פרשת כי תבוא";
+            hName = "הפטרה: קומי אורי (ישעיהו ס')";
+        } else if (dStr >= "2026-09-06" && dStr <= "2026-09-12") {
+            pName = "פרשת נצבים - וילך";
+            hName = "הפטרה: שוש אשיש (ישעיהו ס\"א)";
+        }
+
+        state.shabbat.parasha = pName;
+        state.shabbat.haftara = hName;
     }
 
     async function compressImage(file, maxWidth = 1920, quality = 0.80) {
@@ -603,6 +634,7 @@
         document.documentElement.style.setProperty('--weekday-row-padding', (state.weekdayRowSpacing || 10) + 'px');
         document.documentElement.style.setProperty('--weekday-font-size', (state.weekdayFontSize || 1.1) + 'rem');
         document.documentElement.style.setProperty('--shabbat-font-size', (state.shabbatFontSize || 1.1) + 'rem');
+        document.documentElement.style.setProperty('--shabbat-card-border', state.shabbatBorderColor || '#e2e8f0');
 
         document.documentElement.style.setProperty('--ticker-bg', state.tickerBgColor || '#1a365d');
         document.documentElement.style.setProperty('--ticker-color', state.tickerColor || '#ffffff');
@@ -642,6 +674,10 @@
         if(['lat', 'lng', 'minchaOffset', 'autoMincha'].includes(field)) {
             updateMinchaStatusText();
         }
+        if(field === 'autoParasha' && value) {
+            checkAndSetAutoParasha();
+            renderBoard();
+        }
     }
 
     function updateWeekdayFont(val) {
@@ -660,6 +696,10 @@
         let num = parseFloat(val);
         document.getElementById('shabbat-font-val').innerText = num;
         updateStateField('shabbatFontSize', num);
+    }
+
+    function updateShabbatBorderColor(val) {
+        updateStateField('shabbatBorderColor', val);
     }
 
     function updateShabbatField(field, value) {
@@ -724,6 +764,7 @@
     }
 
     function renderBoard() {
+        checkAndSetAutoParasha();
         applyStyles();
         const container = document.getElementById('presentationContainer');
         const sequence = state.slidesSequence || [];
@@ -798,9 +839,9 @@
                             <h4 style="color: var(--secondary-color); font-size: 1.1rem; margin-bottom: 8px;">יום שישי 🕯️</h4>
                             <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 12px;">
                                 ${state.shabbat.friday.map(f => `
-                                    <div class="card" style="display: flex; justify-content: space-between; align-items: center; padding: 12px 18px;">
+                                    <div class="card" style="display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 16px; text-align: center; gap: 8px;">
                                         <span style="font-size: var(--shabbat-font-size);">${f.event}</span>
-                                        <strong style="font-size: var(--shabbat-font-size); color: var(--primary-color);">${f.time}</strong>
+                                        <strong style="font-size: calc(var(--shabbat-font-size) + 0.2rem); color: var(--primary-color);">${f.time}</strong>
                                     </div>
                                 `).join('')}
                             </div>
@@ -810,9 +851,9 @@
                             <h4 style="color: var(--secondary-color); font-size: 1.1rem; margin-bottom: 8px;">יום שבת 🍷</h4>
                             <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 12px;">
                                 ${state.shabbat.saturday.map(s => `
-                                    <div class="card" style="display: flex; justify-content: space-between; align-items: center; padding: 12px 18px;">
+                                    <div class="card" style="display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 16px; text-align: center; gap: 8px;">
                                         <span style="font-size: var(--shabbat-font-size);">${s.event}</span>
-                                        <strong style="font-size: var(--shabbat-font-size); color: var(--primary-color);">${s.time}</strong>
+                                        <strong style="font-size: calc(var(--shabbat-font-size) + 0.2rem); color: var(--primary-color);">${s.time}</strong>
                                     </div>
                                 `).join('')}
                             </div>
@@ -888,8 +929,7 @@
     function setupKeyboardNavigation() {
         document.addEventListener('keydown', (e) => {
             if (['INPUT', 'TEXTAREA', 'SELECT'].includes(document.activeElement.tagName)) return;
-            if (document.getElementById('controlPanelModal').style.display === 'flex' || 
-                document.getElementById('passwordModal').style.display === 'flex') return;
+            if (document.getElementById('controlPanelModal').style.display === 'flex' || document.getElementById('passwordModal').style.display === 'flex') return;
 
             const count = window.currentExpandedSlidesCount || 1;
             if (count <= 1) return;
@@ -906,22 +946,19 @@
         });
     }
 
-    function requestPassword() {
+    function requestControlPanelPassword() {
         document.getElementById('input-admin-password').value = '';
         document.getElementById('passwordModal').style.display = 'flex';
         setTimeout(() => document.getElementById('input-admin-password').focus(), 100);
     }
 
-    function checkAdminPassword() {
-        const pwd = document.getElementById('input-admin-password').value;
-        if (!state.adminPassword) state.adminPassword = '1234';
-
-        if (pwd === state.adminPassword) {
+    function verifyPassword() {
+        const val = document.getElementById('input-admin-password').value;
+        if (val === (state.adminPassword || "1234")) {
             closeModal('passwordModal');
             openControlPanel();
         } else {
-            alert('סיסמה שגויה!');
-            document.getElementById('input-admin-password').value = '';
+            alert("סיסמה שגויה!");
         }
     }
 
@@ -962,10 +999,12 @@
         document.getElementById('weekday-row-val').innerText = state.weekdayRowSpacing || 10;
         document.getElementById('check-weekday-bold').checked = !!state.weekdayBold;
 
+        document.getElementById('check-auto-parasha').checked = !!state.autoParasha;
         document.getElementById('input-shabbat-parasha').value = state.shabbat.parasha || '';
         document.getElementById('input-shabbat-haftara').value = state.shabbat.haftara || '';
         document.getElementById('range-shabbat-font').value = state.shabbatFontSize || 1.1;
         document.getElementById('shabbat-font-val').innerText = state.shabbatFontSize || 1.1;
+        document.getElementById('input-shabbat-border-color').value = state.shabbatBorderColor || '#e2e8f0';
 
         document.getElementById('input-slide-interval').value = state.slideInterval || 10;
 
@@ -1080,19 +1119,19 @@
                         <label>הוסף תמונות לפינה:</label>
                         <input type="file" accept="image/*" multiple onchange="handleImageUpload(event, ${i})">
                     </div>
-                    <div>
+                    <div id="img-list-${i}">
                         ${(item.images || []).map((img, imgIdx) => `
                             <div class="img-thumb-row" draggable="true" 
                                  ondragstart="onImgDragStart(event, ${i}, ${imgIdx})" 
-                                 ondragover="onDragOver(event)" 
+                                 ondragover="onImgDragOver(event)" 
                                  ondrop="onImgDrop(event, ${i}, ${imgIdx})" 
                                  ondragend="onImgDragEnd(event)">
                                 <div style="display: flex; align-items: center; gap: 10px;">
                                     <span>⠿</span>
-                                    <img src="${img}" style="width: 45px; height: 35px; object-fit: cover; border-radius: 4px; border: 1px solid #cbd5e0;">
-                                    <span style="font-weight: 500;">תמונה ${imgIdx + 1}</span>
+                                    <img src="${img}" style="width: 45px; height: 45px; object-fit: cover; border-radius: 4px; border: 1px solid #cbd5e0;" alt="תצוגה מקדימה">
+                                    <span style="font-size: 0.95rem; font-weight: 600;">תמונה ${imgIdx + 1}</span>
                                 </div>
-                                <button class="btn-action" style="margin:0; background:#e53e3e; padding: 2px 8px;" onclick="removeCustomImage(${i}, ${imgIdx})">מחק תמונה</button>
+                                <button class="btn-action" style="margin:0; background:#e53e3e; padding: 4px 10px;" onclick="removeCustomImage(${i}, ${imgIdx})">מחק תמונה</button>
                             </div>
                         `).join('')}
                     </div>
@@ -1105,14 +1144,12 @@
     function onDragStart(e) {
         draggedIndex = parseInt(e.currentTarget.getAttribute('data-index'));
         e.currentTarget.classList.add('dragging');
-        e.stopPropagation();
     }
     function onDragOver(e) {
         e.preventDefault();
     }
     function onDrop(e, targetIndex) {
         e.preventDefault();
-        e.stopPropagation();
         if (draggedIndex === null || draggedIndex === targetIndex) return;
         const movedItem = state.slidesSequence.splice(draggedIndex, 1)[0];
         state.slidesSequence.splice(targetIndex, 0, movedItem);
@@ -1127,30 +1164,31 @@
 
     let draggedImgSlideIdx = null;
     let draggedImgIdx = null;
-
     function onImgDragStart(e, slideIdx, imgIdx) {
+        e.stopPropagation();
         draggedImgSlideIdx = slideIdx;
         draggedImgIdx = imgIdx;
         e.currentTarget.classList.add('dragging');
-        e.stopPropagation();
     }
-
-    function onImgDrop(e, targetSlideIdx, targetImgIdx) {
+    function onImgDragOver(e) {
         e.preventDefault();
+    }
+    function onImgDrop(e, slideIdx, targetImgIdx) {
         e.stopPropagation();
-        if (draggedImgSlideIdx !== targetSlideIdx || draggedImgIdx === null || draggedImgIdx === targetImgIdx) return;
+        e.preventDefault();
+        if (draggedImgSlideIdx !== slideIdx || draggedImgIdx === null || draggedImgIdx === targetImgIdx) return;
         
-        let images = state.slidesSequence[targetSlideIdx].images;
-        const movedImg = images.splice(draggedImgIdx, 1)[0];
-        images.splice(targetImgIdx, 0, movedImg);
+        const imagesArr = state.slidesSequence[slideIdx].images;
+        const movedImg = imagesArr.splice(draggedImgIdx, 1)[0];
+        imagesArr.splice(targetImgIdx, 0, movedImg);
         
         draggedImgSlideIdx = null;
         draggedImgIdx = null;
         backgroundSave();
         renderAdminSlidesSequence();
     }
-
     function onImgDragEnd(e) {
+        e.stopPropagation();
         e.currentTarget.classList.remove('dragging');
         draggedImgSlideIdx = null;
         draggedImgIdx = null;
