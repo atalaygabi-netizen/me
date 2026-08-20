@@ -290,7 +290,9 @@
         </div>
     </div>
 
-    <div class="presentation-container" id="presentationContainer" onclick="handleScreenClick(event)"></div>
+    <div class="presentation-container" id="presentationContainer" onclick="handleScreenClick(event)">
+  <div id="slide-progress-bar" style="position: absolute; top: 0; left: 0; height: 5px; background-color: #4CAF50; width: 0%; transition: width 0.1s linear; z-index: 100;"></div>
+</div>
 
     <div id="bottom-ticker">
         <div class="ticker-track" id="tickerTrackElement"></div>
