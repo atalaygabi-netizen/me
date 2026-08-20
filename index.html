@@ -579,9 +579,8 @@
         setupKeyboardNavigation();
     }
 
-   function checkAndSetAutoParasha() {
-  // אם רוצים לבדוק בתצוגה מקדימה, ודאו שהגרשיים קיימים:
-  const now = new Date("2026-09-02"); 
+ function checkAndSetAutoParasha() {
+  const now = new Date("2026-09-02");
   const dStr = now.toISOString().split('T')[0];
 
   let pName = "פרשת כי תצא";
@@ -601,11 +600,10 @@
   state.shabbat.parasha = pName;
   state.shabbat.haftara = hName;
 
-  // ריענון התצוגה בלוח
   if (typeof renderBoard === 'function') {
     renderBoard();
   }
- }
+}
 
     async function compressImage(file, maxWidth = 1920, quality = 0.80) {
         return new Promise((resolve) => {
