@@ -1,0 +1,1221 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>לוח עדכונים לבית הכנסת</title>
+    <!-- ספריית חישוב זמני שמש -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/suncalc/1.9.0/suncalc.min.js"></script>
+    <style>
+        :root {
+            --primary-color: #1a365d;
+            --secondary-color: #2b6cb0;
+            --accent-color: #d69e2e;
+            --bg-color: #f7fafc;
+            --text-color: #2d3748;
+            --card-bg: #ffffff;
+            
+            --weekday-row-padding: 10px;
+            --weekday-font-size: 1.1rem;
+            --shabbat-font-size: 1.1rem;
+
+            --ticker-bg: #1a365d;
+            --ticker-color: #ffffff;
+            --ticker-font-size: 1.2rem;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            overflow: hidden;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            user-select: none;
+        }
+
+        #top-control-bar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 40px;
+            background: rgba(26, 54, 93, 0.95);
+            color: white;
+            display: flex;
+            align-items: center;
+            padding: 0 20px;
+            z-index: 10000;
+            backdrop-filter: blur(5px);
+            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+        }
+
+        #top-control-bar button {
+            background: var(--accent-color);
+            border: none;
+            color: white;
+            padding: 5px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: 0.2s;
+            flex-shrink: 0;
+        }
+
+        #top-control-bar button:hover {
+            opacity: 0.9;
+        }
+
+        .presentation-container {
+            position: relative;
+            width: 100vw;
+            height: calc(100vh - 80px);
+            margin-top: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+        }
+
+        .slide {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            display: none;
+            padding: 15px 25px;
+            flex-direction: column;
+            justify-content: flex-start;
+            align-items: center;
+            animation: fadeIn 0.5s ease-in-out;
+            overflow-y: auto;
+        }
+
+        .slide.active {
+            display: flex;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: scale(0.98); }
+            to { opacity: 1; transform: scale(1); }
+        }
+
+        .card {
+            background: var(--card-bg);
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.08);
+            border: 2px solid #e2e8f0;
+            position: relative;
+        }
+
+        .card h3 {
+            border-bottom: 2px solid var(--accent-color);
+            padding-bottom: 8px;
+            margin-bottom: 12px;
+            color: var(--primary-color);
+            font-size: 1.4rem;
+        }
+
+        .time-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: var(--weekday-row-padding) 0;
+            border-bottom: 1px dashed #edf2f7;
+            font-size: var(--weekday-font-size);
+        }
+
+        .time-row:last-child {
+            border-bottom: none;
+        }
+
+        #bottom-ticker {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 40px;
+            background: var(--ticker-bg);
+            color: var(--ticker-color);
+            overflow: hidden;
+            z-index: 10000;
+            display: flex;
+            align-items: center;
+            box-shadow: 0 -2px 10px rgba(0,0,0,0.2);
+            white-space: nowrap;
+        }
+
+        .ticker-track {
+            display: inline-block;
+            white-space: nowrap;
+            animation: tickerAnim linear infinite;
+            font-size: var(--ticker-font-size);
+            font-weight: 600;
+            padding-left: 100%;
+        }
+
+        @keyframes tickerAnim {
+            0% { transform: translateX(0); }
+            100% { transform: translateX(-50%); }
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.6);
+            z-index: 20000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal-content {
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            width: 850px;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+        }
+
+        .form-group { margin-bottom: 15px; }
+        .form-group label { display: block; margin-bottom: 5px; font-weight: bold; }
+        .form-group input, .form-group select, .form-group textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #cbd5e0;
+            border-radius: 6px;
+        }
+
+        .btn-action {
+            background: #319795;
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-top: 5px;
+            font-weight: bold;
+        }
+
+        .admin-item-row {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 8px;
+            align-items: center;
+            background: #f1f5f9;
+            padding: 6px 10px;
+            border-radius: 6px;
+            border: 1px solid #cbd5e0;
+        }
+
+        .custom-slide-box {
+            border: 1px solid #cbd5e0;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            background: #f8fafc;
+            cursor: grab;
+            transition: background 0.2s;
+        }
+
+        .custom-slide-box:active {
+            cursor: grabbing;
+        }
+
+        .custom-slide-box.dragging {
+            opacity: 0.4;
+            background: #cbd5e0;
+        }
+
+        .img-thumb-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: #fff;
+            padding: 6px 10px;
+            border: 1px solid #cbd5e0;
+            border-radius: 6px;
+            margin-bottom: 6px;
+            cursor: grab;
+        }
+
+        .img-thumb-row:active {
+            cursor: grabbing;
+        }
+
+        .img-thumb-row.dragging {
+            opacity: 0.4;
+            background: #cbd5e0;
+        }
+
+        .single-image-display {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            width: 100%;
+            height: calc(100vh - 180px);
+            max-width: 1200px;
+            margin-top: 10px;
+        }
+
+        .single-image-display img {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+            border-radius: 8px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.15);
+            background: #fff;
+            padding: 5px;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="top-control-bar">
+        <div id="topBarTitleArea" style="flex: 1; display: flex;">
+            <span id="topBarTitleText">לוח עדכונים לבית הכנסת</span>
+        </div>
+        <div>
+            <button onclick="requestPassword()">לוח בקרה ⚙️</button>
+        </div>
+    </div>
+
+    <div class="presentation-container" id="presentationContainer" onclick="handleScreenClick(event)"></div>
+
+    <div id="bottom-ticker">
+        <div class="ticker-track" id="tickerTrackElement"></div>
+    </div>
+
+    <!-- מודל בקשת סיסמה ללוח בקרה -->
+    <div class="modal" id="passwordModal" onclick="if(event.target === this) closeModal('passwordModal')">
+        <div class="modal-content" style="width: 400px; text-align: center;" onclick="event.stopPropagation()">
+            <h3 style="color: var(--primary-color); margin-bottom: 15px; border-bottom: none;">כניסה ללוח בקרה 🔐</h3>
+            <p style="font-size: 0.9rem; color: #4a5568; margin-bottom: 15px;">נא להקליד את קוד הגישה (ברירת מחדל: 1234)</p>
+            <div class="form-group">
+                <input type="password" id="input-admin-password" placeholder="הכנס קוד גישה..." style="text-align: center; font-size: 1.2rem; letter-spacing: 2px;" onkeydown="if(event.key==='Enter') checkAdminPassword()">
+            </div>
+            <div style="display: flex; gap: 10px; justify-content: center; margin-top: 20px;">
+                <button class="btn-action" style="background: #2f855a; padding: 8px 20px;" onclick="checkAdminPassword()">כניסה</button>
+                <button class="btn-action" style="background: #e53e3e; padding: 8px 20px;" onclick="closeModal('passwordModal')">ביטול</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- לוח בקרה -->
+    <div class="modal" id="controlPanelModal" onclick="if(event.target === this) closeModal('controlPanelModal')">
+        <div class="modal-content" onclick="event.stopPropagation()">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 2px solid #e2e8f0; padding-bottom: 15px;">
+                <h2 style="margin: 0; color: var(--primary-color);">לוח בקרה ועריכת מצגות ⚙️</h2>
+                <button class="btn-action" style="background: #2f855a; padding: 10px 20px; font-size: 1rem; margin-top:0;" onclick="closeModal('controlPanelModal')">שמור וסגור 💾</button>
+            </div>
+            
+            <!-- הגדרות כותרת עליונה -->
+            <div style="background: #edf2f7; padding: 15px; border-radius: 8px; margin-bottom: 20px;">
+                <h3 style="font-size: 1.1rem; margin-bottom: 10px; color: var(--primary-color);">הגדרות כותרת עליונה</h3>
+                <div class="form-group">
+                    <label>טקסט כותרת עליונה:</label>
+                    <input type="text" id="input-topbar-title" oninput="updateStateField('topBarTitle', this.value)">
+                </div>
+                <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                    <div class="form-group" style="flex: 1; min-width: 150px;">
+                        <label>מיקום/יישור:</label>
+                        <select id="select-topbar-align" onchange="updateStateField('topBarAlign', this.value)">
+                            <option value="right">ימין</option>
+                            <option value="center">מרכז</option>
+                            <option value="left">שמאל</option>
+                        </select>
+                    </div>
+                    <div class="form-group" style="flex: 1; min-width: 150px;">
+                        <label>גודל כתב:</label>
+                        <input type="text" id="input-topbar-fontsize" placeholder="לדוגמה: 1.1rem" oninput="updateStateField('topBarFontSize', this.value)">
+                    </div>
+                    <div class="form-group" style="flex: 1; min-width: 150px;">
+                        <label>צבע כתב:</label>
+                        <input type="color" id="input-topbar-color" onchange="updateStateField('topBarColor', this.value)" style="height: 38px; padding: 2px;">
+                    </div>
+                </div>
+            </div>
+
+            <!-- הגדרות סרט נע תחתתי -->
+            <div style="background: #edf2f7; padding: 15px; border-radius: 8px; margin-bottom: 20px;">
+                <h3 style="font-size: 1.1rem; margin-bottom: 10px; color: var(--primary-color);">הגדרות סרט נע (תחתית המסך)</h3>
+                <div class="form-group">
+                    <label>תוכן סרט נע:</label>
+                    <textarea id="input-ticker-text" rows="2" oninput="updateStateField('tickerText', this.value)" placeholder="הכנס הודעות..."></textarea>
+                </div>
+                <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                    <div class="form-group" style="flex: 1; min-width: 150px;">
+                        <label>סימון מפריד:</label>
+                        <input type="text" id="input-ticker-sep" placeholder="לדוגמה: ★ או *" oninput="updateStateField('tickerSeparator', this.value)">
+                    </div>
+                    <div class="form-group" style="flex: 1; min-width: 150px;">
+                        <label>מהירות ריצה (שניות):</label>
+                        <input type="number" id="input-ticker-speed" min="5" max="100" oninput="updateStateField('tickerSpeed', parseInt(this.value) || 25)">
+                    </div>
+                    <div class="form-group" style="flex: 1; min-width: 150px;">
+                        <label>צבע רקע הסרט:</label>
+                        <input type="color" id="input-ticker-bg" onchange="updateStateField('tickerBgColor', this.value)" style="height: 38px; padding: 2px;">
+                    </div>
+                    <div class="form-group" style="flex: 1; min-width: 150px;">
+                        <label>צבע טקסט הסרט:</label>
+                        <input type="color" id="input-ticker-color" onchange="updateStateField('tickerColor', this.value)" style="height: 38px; padding: 2px;">
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label>כותרת מסך ימי חול:</label>
+                <input type="text" id="input-title-weekday" oninput="updateStateField('weekdayTitle', this.value)">
+            </div>
+
+            <div style="background: #edf2f7; padding: 15px; border-radius: 8px; margin-bottom: 20px;">
+                <h3 style="font-size: 1.1rem; margin-bottom: 10px; color: var(--primary-color);">חישוב מנחה שבועי (לפי שקיעת יום חמישי)</h3>
+                <div style="display:flex; gap:10px;">
+                    <div class="form-group" style="flex:1;"><label>קו רוחב (Latitude):</label><input type="number" step="any" id="input-lat" oninput="updateStateField('lat', parseFloat(this.value))"></div>
+                    <div class="form-group" style="flex:1;"><label>קו אורך (Longitude):</label><input type="number" step="any" id="input-lng" oninput="updateStateField('lng', parseFloat(this.value))"></div>
+                </div>
+                <div class="form-group" style="display: flex; align-items: center; gap: 10px; margin-top: 10px;">
+                    <input type="checkbox" id="check-auto-mincha" style="width: auto;" onchange="updateStateField('autoMincha', this.checked)">
+                    <label for="check-auto-mincha" style="margin-bottom:0; cursor:pointer;">חשב מנחה אוטומטית שבועית</label>
+                </div>
+                <div class="form-group">
+                    <label>כמה דקות לפני השקיעה תפילת מנחה?</label>
+                    <input type="number" id="input-mincha-offset" style="width: 120px;" oninput="updateStateField('minchaOffset', parseInt(this.value) || 25)">
+                </div>
+                <div id="mincha-status-info" style="font-size: 0.9rem; color: #2b6cb0; margin-top: 8px; font-weight: bold;"></div>
+            </div>
+
+            <div class="form-group">
+                <label style="margin:0;">זמני תפילות יום חול:</label>
+                <div style="background: #f8fafc; padding: 12px; border-radius: 6px; margin: 10px 0 15px 0; border: 1px solid #cbd5e0;">
+                    <h4 style="font-size: 0.95rem; color: var(--primary-color); margin-bottom: 10px;">התאמת גודל כתב, רווח והדגשה - ימי חול בלבד</h4>
+                    <div style="display:flex; gap:15px; flex-wrap: wrap; align-items: center;">
+                        <div class="form-group" style="flex:1; min-width: 180px; margin-bottom:0;">
+                            <label style="font-size:0.85rem;">גודל כתב: <span id="weekday-font-val" style="color:var(--secondary-color);">1.1</span>rem</label>
+                            <input type="range" id="range-weekday-font" min="0.8" max="2.2" step="0.1" value="1.1" oninput="updateWeekdayFont(this.value)" style="width:100%; cursor:pointer;">
+                        </div>
+                        <div class="form-group" style="flex:1; min-width: 180px; margin-bottom:0;">
+                            <label style="font-size:0.85rem;">רווח שורות: <span id="weekday-row-val" style="color:var(--secondary-color);">10</span> פיקסלים</label>
+                            <input type="range" id="range-weekday-row" min="4" max="30" step="1" value="10" oninput="updateWeekdayRow(this.value)" style="width:100%; cursor:pointer;">
+                        </div>
+                        <div class="form-group" style="flex:0; min-width: 140px; margin-bottom:0; display:flex; align-items:center; gap:8px; padding-top:15px;">
+                            <input type="checkbox" id="check-weekday-bold" style="width:auto; cursor:pointer;" onchange="updateStateField('weekdayBold', this.checked)">
+                            <label for="check-weekday-bold" style="margin-bottom:0; cursor:pointer; font-size:0.9rem;">הדגש שמות תפילה</label>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="admin-weekday-times-container"></div>
+                <button class="btn-action" style="background:#2b6cb0;" onclick="addWeekdayTime()">+ הוסף תפילה לימי חול</button>
+            </div>
+
+            <hr style="margin: 20px 0;">
+
+            <h3>עריכת זמני השבת והשיעורים</h3>
+            <div class="form-group" style="margin-top: 10px;">
+                <label>פרשת השבוע:</label>
+                <input type="text" id="input-shabbat-parasha" oninput="updateShabbatField('parasha', this.value)">
+            </div>
+            <div class="form-group">
+                <label>הפטרה:</label>
+                <input type="text" id="input-shabbat-haftara" oninput="updateShabbatField('haftara', this.value)">
+            </div>
+
+            <div style="background: #f8fafc; padding: 12px; border-radius: 6px; margin: 15px 0; border: 1px solid #cbd5e0;">
+                <h4 style="font-size: 0.95rem; color: var(--primary-color); margin-bottom: 10px;">התאמת גודל כתב כרטיסיות שבת</h4>
+                <div style="display:flex; gap:15px; flex-wrap: wrap;">
+                    <div class="form-group" style="flex:1; min-width: 200px; margin-bottom:0;">
+                        <label style="font-size:0.85rem;">גודל כתב כרטיסיות: <span id="shabbat-font-val" style="color:var(--secondary-color);">1.1</span>rem</label>
+                        <input type="range" id="range-shabbat-font" min="0.8" max="2.2" step="0.1" value="1.1" oninput="updateShabbatFont(this.value)" style="width:100%; cursor:pointer;">
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label>זמני יום שישי:</label>
+                <div id="admin-friday-times-container"></div>
+                <button class="btn-action" style="background:#2b6cb0;" onclick="addFridayTime()">+ הוסף זמן ליום שישי</button>
+            </div>
+
+            <div class="form-group">
+                <label>זמני יום שבת וצאת השבת:</label>
+                <div id="admin-saturday-times-container"></div>
+                <button class="btn-action" style="background:#2b6cb0;" onclick="addSaturdayTime()">+ הוסף זמן לשבת / צאת שבת</button>
+            </div>
+
+            <hr style="margin: 20px 0;">
+
+            <h3>ניהול סדר המצגות, הפינות ומסכי התפילות</h3>
+            <p style="font-size: 0.9rem; color: #4a5568; margin-bottom: 12px;">גרור את התיבות למטה כדי לשנות את סדר התצוגה במצגת, וכן גרור את התמונות בתוך התיבה (מוצגת תמונה מקדימה) כדי לשנות את סדר הופעתן.</p>
+            
+            <div style="display: flex; gap: 10px; margin-bottom: 15px; flex-wrap: wrap;">
+                <button class="btn-action" style="background: #2b6cb0; margin:0;" onclick="addCustomSlide()">+ הוסף פינת תמונות חדשה</button>
+                <button class="btn-action" style="background: #2f855a; margin:0;" onclick="duplicateSlideType('weekday')">📋 שכפל מסך תפילות חול</button>
+                <button class="btn-action" style="background: #2f855a; margin:0;" onclick="duplicateSlideType('shabbat')">📋 שכפל מסך זמני שבת</button>
+            </div>
+            <div id="admin-slides-sequence-container"></div>
+
+            <div class="form-group" style="margin-top: 25px;">
+                <label>זמן החלפת מצגות אוטומטית (בשניות):</label>
+                <input type="number" id="input-slide-interval" min="3" max="60" oninput="updateStateField('slideInterval', parseInt(this.value) || 10)">
+            </div>
+
+            <div style="margin-top: 25px; text-align: left;">
+                <button class="btn-action" style="background: #2f855a; padding: 10px 20px; font-size: 1.1rem;" onclick="closeModal('controlPanelModal')">שמור וסגור 💾</button>
+            </div>
+        </div>
+    </div>
+
+<script>
+    let state = {
+        adminPassword: "1234",
+        lat: 31.748, 
+        lng: 34.996, 
+        autoMincha: true, 
+        minchaOffset: 25,
+        slideInterval: 10,
+        weekdayFontSize: 1.1,
+        weekdayRowSpacing: 10,
+        weekdayBold: false,
+        shabbatFontSize: 1.1,
+        cachedThursdayStr: "",
+        cachedMinchaTime: "",
+        weekdayTitle: "זמני תפילות ביום חול",
+        topBarTitle: "לוח עדכונים לבית הכנסת",
+        topBarAlign: "center",
+        topBarFontSize: "1.1rem",
+        topBarColor: "#ffffff",
+        tickerText: "ברוכים הבאים לבית הכנסת • נא להקפיד על כיבוי פלאפונים בזמן התפילה • שבת שלום ומבורך!",
+        tickerSeparator: "★",
+        tickerSpeed: 25,
+        tickerBgColor: "#1a365d",
+        tickerColor: "#ffffff",
+        tickerFontSize: "1.2rem",
+        weekdayTimes: [
+            { name: "שחרית א'", time: "06:00" },
+            { name: "שחרית ב'", time: "07:00" },
+            { name: "שחרית ג'", time: "08:00" },
+            { name: "מנחה", time: "Auto" },
+            { name: "ערבית", time: "20:30" }
+        ],
+        shabbat: {
+            parasha: "פרשת שופטים",
+            haftara: "הפטרה: ישעיהו נ\"א, י\"ב - נ\"ג, י\"ב",
+            friday: [
+                { time: "19:15", event: "שיר השירים" },
+                { time: "19:25", event: "מנחה + קבלת שבת + שיחת הרב + ערבית" }
+            ],
+            saturday: [
+                { time: "08:15", event: "שחרית שבת (הודו)" },
+                { time: "10:15", event: "שיעור באור החיים – הרב ינון" },
+                { time: "13:15", event: "מנחה גדולה" },
+                { time: "17:00", event: "מנחה" },
+                { time: "20:05", event: "ערבית וצאת השבת" }
+            ]
+        },
+        slidesSequence: [
+            { uniqueId: 'w_default', type: 'weekday' },
+            { uniqueId: 's_default', type: 'shabbat' },
+            { uniqueId: 1, type: 'custom', title: "שיעורי תורה מרכזיים", fontSize: "2.3rem", fontColor: "#1a365d", images: [] }
+        ]
+    };
+
+    let currentSlide = 0;
+    let slideTimer = null;
+
+    function saveToLocalStorage() {
+        try {
+            localStorage.setItem('SynagogueBoardState', JSON.stringify(state));
+        } catch(e) {
+            console.warn("שגיאה בשמירה לזיכרון הדפדפן", e);
+        }
+    }
+
+    function loadFromLocalStorage() {
+        try {
+            let saved = localStorage.getItem('SynagogueBoardState');
+            if (saved) {
+                let parsed = JSON.parse(saved);
+                state = Object.assign({}, state, parsed);
+                if (!state.adminPassword) state.adminPassword = "1234";
+                if (!state.slidesSequence || state.slidesSequence.length === 0) {
+                    state.slidesSequence = [
+                        { uniqueId: 'w_default', type: 'weekday' },
+                        { uniqueId: 's_default', type: 'shabbat' }
+                    ];
+                }
+            }
+        } catch(e) {
+            console.error("שגיאה בטעינת הזיכרון, משתמש בהגדרות ברירת מחדל", e);
+        }
+    }
+
+    function backgroundSave() {
+        state.cachedThursdayStr = "";
+        saveToLocalStorage();
+        applyStyles();
+    }
+
+    function initApp() {
+        loadFromLocalStorage();
+        renderBoard();
+        startSlideRotation();
+        setupKeyboardNavigation();
+    }
+
+    async function compressImage(file, maxWidth = 1920, quality = 0.80) {
+        return new Promise((resolve) => {
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                const img = new Image();
+                img.onload = () => {
+                    const canvas = document.createElement('canvas');
+                    let width = img.width;
+                    let height = img.height;
+                    if (width > maxWidth) {
+                        height = Math.round((height * maxWidth) / width);
+                        width = maxWidth;
+                    }
+                    canvas.width = width;
+                    canvas.height = height;
+                    const ctx = canvas.getContext('2d');
+                    ctx.imageSmoothingEnabled = true;
+                    ctx.imageSmoothingQuality = 'high';
+                    ctx.drawImage(img, 0, 0, width, height);
+                    resolve(canvas.toDataURL('image/jpeg', quality));
+                };
+                img.src = e.target.result;
+            };
+            reader.readAsDataURL(file);
+        });
+    }
+
+    function applyStyles() {
+        document.documentElement.style.setProperty('--weekday-row-padding', (state.weekdayRowSpacing || 10) + 'px');
+        document.documentElement.style.setProperty('--weekday-font-size', (state.weekdayFontSize || 1.1) + 'rem');
+        document.documentElement.style.setProperty('--shabbat-font-size', (state.shabbatFontSize || 1.1) + 'rem');
+
+        document.documentElement.style.setProperty('--ticker-bg', state.tickerBgColor || '#1a365d');
+        document.documentElement.style.setProperty('--ticker-color', state.tickerColor || '#ffffff');
+        document.documentElement.style.setProperty('--ticker-font-size', state.tickerFontSize || '1.2rem');
+
+        const topArea = document.getElementById('topBarTitleArea');
+        const topText = document.getElementById('topBarTitleText');
+        if (topArea && topText) {
+            topText.innerText = state.topBarTitle || "לוח עדכונים לבית הכנסת";
+            topText.style.fontSize = state.topBarFontSize || "1.1rem";
+            topText.style.color = state.topBarColor || "#ffffff";
+            
+            if (state.topBarAlign === 'center') {
+                topArea.style.justifyContent = 'center';
+            } else if (state.topBarAlign === 'left') {
+                topArea.style.justifyContent = 'flex-start';
+            } else {
+                topArea.style.justifyContent = 'flex-end';
+            }
+        }
+
+        const tickerTrack = document.getElementById('tickerTrackElement');
+        if (tickerTrack) {
+            let msg = state.tickerText || "";
+            let sep = ` ${state.tickerSeparator || "★"} `;
+            let fullText = msg + sep;
+            let repeated = (fullText).repeat(6);
+            tickerTrack.innerText = repeated;
+            tickerTrack.style.animationDuration = (state.tickerSpeed || 25) + 's';
+        }
+    }
+
+    function updateStateField(field, value) {
+        state[field] = value;
+        backgroundSave();
+        renderBoard();
+        if(['lat', 'lng', 'minchaOffset', 'autoMincha'].includes(field)) {
+            updateMinchaStatusText();
+        }
+    }
+
+    function updateWeekdayFont(val) {
+        let num = parseFloat(val);
+        document.getElementById('weekday-font-val').innerText = num;
+        updateStateField('weekdayFontSize', num);
+    }
+
+    function updateWeekdayRow(val) {
+        let num = parseInt(val);
+        document.getElementById('weekday-row-val').innerText = num;
+        updateStateField('weekdayRowSpacing', num);
+    }
+
+    function updateShabbatFont(val) {
+        let num = parseFloat(val);
+        document.getElementById('shabbat-font-val').innerText = num;
+        updateStateField('shabbatFontSize', num);
+    }
+
+    function updateShabbatField(field, value) {
+        state.shabbat[field] = value;
+        backgroundSave();
+        renderBoard();
+    }
+
+    function getThursdayDate(date = new Date()) {
+        const day = date.getDay();
+        const d = new Date(date);
+        let addDays = 0;
+        if (day <= 4) {
+            addDays = 4 - day;
+        } else if (day === 5) {
+            addDays = 6;
+        } else if (day === 6) {
+            addDays = 5;
+        }
+        d.setDate(d.getDate() + addDays);
+        return d;
+    }
+
+    function getWeeklyMinchaTime() {
+        if (!state.autoMincha) return state.weekdayTimes.find(t => t.name.includes('מנחה'))?.time || '19:00';
+
+        const thursday = getThursdayDate();
+        const thursdayStr = thursday.toISOString().split('T')[0];
+
+        if (state.cachedThursdayStr === thursdayStr && state.cachedMinchaTime) {
+            return state.cachedMinchaTime;
+        }
+
+        try {
+            if (typeof SunCalc !== 'undefined') {
+                const times = SunCalc.getTimes(thursday, state.lat, state.lng);
+                const sunset = times.sunset;
+                const target = new Date(sunset.getTime() - (state.minchaOffset * 60000));
+                const timeStr = target.toLocaleTimeString('he-IL', {hour: '2-digit', minute:'2-digit'});
+                
+                state.cachedThursdayStr = thursdayStr;
+                state.cachedMinchaTime = timeStr;
+                return timeStr;
+            }
+            return "19:00";
+        } catch(e) {
+            return state.cachedMinchaTime || "19:00";
+        }
+    }
+
+    function updateMinchaStatusText() {
+        const infoEl = document.getElementById('mincha-status-info');
+        if (!infoEl) return;
+        if (!state.autoMincha) {
+            infoEl.innerText = "חישוב אוטומטי מבוטל.";
+            return;
+        }
+        const thursday = getThursdayDate();
+        const dateFormatted = thursday.toLocaleDateString('he-IL');
+        const time = getWeeklyMinchaTime();
+        infoEl.innerText = `שעת מנחה לשבוע זה (מבוסס על שקיעת יום חמישי ${dateFormatted}): ${time}`;
+    }
+
+    function renderBoard() {
+        applyStyles();
+        const container = document.getElementById('presentationContainer');
+        const sequence = state.slidesSequence || [];
+        if (currentSlide >= sequence.length) currentSlide = 0;
+
+        let minchaCalculated = state.autoMincha ? getWeeklyMinchaTime() : '';
+        let html = '';
+        let boldStyle = state.weekdayBold ? 'font-weight: bold;' : 'font-weight: normal;';
+
+        let expandedSlides = [];
+        sequence.forEach(item => {
+            if (item.type === 'custom' && item.images && item.images.length > 0) {
+                item.images.forEach((imgUrl, imgIdx) => {
+                    expandedSlides.push({
+                        type: 'custom_single',
+                        title: item.title || 'פינה מותאמת אישית',
+                        fontSize: item.fontSize || '2.3rem',
+                        fontColor: item.fontColor || '#1a365d',
+                        fontFamily: item.fontFamily || 'sans-serif',
+                        imageUrl: imgUrl,
+                        imageIndex: imgIdx,
+                        totalImages: item.images.length
+                    });
+                });
+            } else if (item.type === 'custom' && (!item.images || item.images.length === 0)) {
+                expandedSlides.push({
+                    type: 'custom_empty',
+                    title: item.title || 'פינה מותאמת אישית',
+                    fontSize: item.fontSize || '2.3rem',
+                    fontColor: item.fontColor || '#1a365d',
+                    fontFamily: item.fontFamily || 'sans-serif'
+                });
+            } else {
+                expandedSlides.push(item);
+            }
+        });
+
+        if (currentSlide >= expandedSlides.length) currentSlide = 0;
+
+        expandedSlides.forEach((item, index) => {
+            let isActive = (index === currentSlide) ? 'active' : '';
+
+            if (item.type === 'weekday') {
+                html += `
+                <div class="slide ${isActive}" id="slide-${index}">
+                    <h1 style="font-size: 2.3rem; color: #1a365d; text-align: center; margin-bottom: 20px;">${state.weekdayTitle}</h1>
+                    <div style="width: 100%; max-width: 1100px;">
+                        <div class="card" style="width: 100%; padding: 30px;">
+                            <h3 style="font-size: 1.6rem; margin-bottom: 15px;">סדר התפילות</h3>
+                            ${state.weekdayTimes.map(t => {
+                                let displayTime = t.time;
+                                if (t.name.includes('מנחה') && state.autoMincha) {
+                                    displayTime = minchaCalculated;
+                                }
+                                return `<div class="time-row"><span style="${boldStyle}">${t.name}</span><strong>${displayTime}</strong></div>`;
+                            }).join('')}
+                        </div>
+                    </div>
+                </div>`;
+            } else if (item.type === 'shabbat') {
+                html += `
+                <div class="slide ${isActive}" id="slide-${index}">
+                    <h1 style="font-size: 2.1rem; color: #1a365d; text-align: center; margin-bottom: 15px;">זמני שבת קודש</h1>
+                    <div style="width: 100%; max-width: 1400px; display: flex; flex-direction: column; gap: 15px; padding-bottom: 20px;">
+                        
+                        <div class="card" style="text-align: center; padding: 12px; border: 2px solid var(--accent-color);">
+                            <h3 style="color: var(--primary-color); font-size: 1.3rem; margin-bottom: 3px; border: none; padding: 0;">${state.shabbat.parasha}</h3>
+                            <div style="font-size: 0.95rem; color: #4a5568;">${state.shabbat.haftara}</div>
+                        </div>
+
+                        <div>
+                            <h4 style="color: var(--secondary-color); font-size: 1.1rem; margin-bottom: 8px;">יום שישי 🕯️</h4>
+                            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 12px;">
+                                ${state.shabbat.friday.map(f => `
+                                    <div class="card" style="display: flex; justify-content: space-between; align-items: center; padding: 12px 18px;">
+                                        <span style="font-size: var(--shabbat-font-size);">${f.event}</span>
+                                        <strong style="font-size: var(--shabbat-font-size); color: var(--primary-color);">${f.time}</strong>
+                                    </div>
+                                `).join('')}
+                            </div>
+                        </div>
+
+                        <div>
+                            <h4 style="color: var(--secondary-color); font-size: 1.1rem; margin-bottom: 8px;">יום שבת 🍷</h4>
+                            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 12px;">
+                                ${state.shabbat.saturday.map(s => `
+                                    <div class="card" style="display: flex; justify-content: space-between; align-items: center; padding: 12px 18px;">
+                                        <span style="font-size: var(--shabbat-font-size);">${s.event}</span>
+                                        <strong style="font-size: var(--shabbat-font-size); color: var(--primary-color);">${s.time}</strong>
+                                    </div>
+                                `).join('')}
+                            </div>
+                        </div>
+
+                    </div>
+                </div>`;
+            } else if (item.type === 'custom_single') {
+                html += `
+                <div class="slide ${isActive}" id="slide-${index}">
+                    <h1 style="font-size: ${item.fontSize}; color: ${item.fontColor}; font-family: ${item.fontFamily}; text-align: center; margin-bottom: 5px;">${item.title}</h1>
+                    <div class="single-image-display">
+                        <img src="${item.imageUrl}" alt="תמונה מתוך הפינה">
+                    </div>
+                </div>`;
+            } else if (item.type === 'custom_empty') {
+                html += `
+                <div class="slide ${isActive}" id="slide-${index}">
+                    <h1 style="font-size: ${item.fontSize}; color: ${item.fontColor}; font-family: ${item.fontFamily}; text-align: center; margin-bottom: 10px;">${item.title}</h1>
+                    <div style="color: #a0aec0; margin-top: 40px; font-size: 1.2rem;">אין תמונות להצגה בפינה זו</div>
+                </div>`;
+            }
+        });
+
+        container.innerHTML = html;
+        window.currentExpandedSlidesCount = expandedSlides.length;
+    }
+
+    function startSlideRotation() {
+        if (slideTimer) clearInterval(slideTimer);
+        const interval = (state.slideInterval || 10) * 1000;
+        slideTimer = setInterval(() => {
+            const count = window.currentExpandedSlidesCount || 1;
+            if (count <= 1) return;
+            currentSlide = (currentSlide + 1) % count;
+            updateActiveSlideDOM();
+        }, interval);
+    }
+
+    function resetSlideTimer() {
+        startSlideRotation();
+    }
+
+    function updateActiveSlideDOM() {
+        const count = window.currentExpandedSlidesCount || 1;
+        if (currentSlide >= count) currentSlide = 0;
+        const slides = document.querySelectorAll('.presentation-container .slide');
+        slides.forEach((slide, idx) => {
+            if (idx === currentSlide) {
+                slide.classList.add('active');
+            } else {
+                slide.classList.remove('active');
+            }
+        });
+    }
+
+    function handleScreenClick(event) {
+        const count = window.currentExpandedSlidesCount || 1;
+        if (count <= 1) return;
+
+        const width = window.innerWidth;
+        const x = event.clientX;
+
+        if (x < width * 0.3) {
+            currentSlide = (currentSlide - 1 + count) % count;
+        } else {
+            currentSlide = (currentSlide + 1) % count;
+        }
+        updateActiveSlideDOM();
+        resetSlideTimer();
+    }
+
+    function setupKeyboardNavigation() {
+        document.addEventListener('keydown', (e) => {
+            if (['INPUT', 'TEXTAREA', 'SELECT'].includes(document.activeElement.tagName)) return;
+            if (document.getElementById('controlPanelModal').style.display === 'flex' || 
+                document.getElementById('passwordModal').style.display === 'flex') return;
+
+            const count = window.currentExpandedSlidesCount || 1;
+            if (count <= 1) return;
+
+            if (e.key === 'ArrowRight' || e.key === 'ArrowDown') {
+                currentSlide = (currentSlide + 1) % count;
+                updateActiveSlideDOM();
+                resetSlideTimer();
+            } else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') {
+                currentSlide = (currentSlide - 1 + count) % count;
+                updateActiveSlideDOM();
+                resetSlideTimer();
+            }
+        });
+    }
+
+    function requestPassword() {
+        document.getElementById('input-admin-password').value = '';
+        document.getElementById('passwordModal').style.display = 'flex';
+        setTimeout(() => document.getElementById('input-admin-password').focus(), 100);
+    }
+
+    function checkAdminPassword() {
+        const pwd = document.getElementById('input-admin-password').value;
+        if (!state.adminPassword) state.adminPassword = '1234';
+
+        if (pwd === state.adminPassword) {
+            closeModal('passwordModal');
+            openControlPanel();
+        } else {
+            alert('סיסמה שגויה!');
+            document.getElementById('input-admin-password').value = '';
+        }
+    }
+
+    function openControlPanel() {
+        populateControlPanel();
+        document.getElementById('controlPanelModal').style.display = 'flex';
+    }
+
+    function closeModal(id) {
+        document.getElementById(id).style.display = 'none';
+        if (id === 'controlPanelModal') {
+            renderBoard();
+            startSlideRotation();
+        }
+    }
+
+    function populateControlPanel() {
+        document.getElementById('input-topbar-title').value = state.topBarTitle || '';
+        document.getElementById('select-topbar-align').value = state.topBarAlign || 'center';
+        document.getElementById('input-topbar-fontsize').value = state.topBarFontSize || '1.1rem';
+        document.getElementById('input-topbar-color').value = state.topBarColor || '#ffffff';
+        
+        document.getElementById('input-ticker-text').value = state.tickerText || '';
+        document.getElementById('input-ticker-sep').value = state.tickerSeparator || '★';
+        document.getElementById('input-ticker-speed').value = state.tickerSpeed || 25;
+        document.getElementById('input-ticker-bg').value = state.tickerBgColor || '#1a365d';
+        document.getElementById('input-ticker-color').value = state.tickerColor || '#ffffff';
+
+        document.getElementById('input-title-weekday').value = state.weekdayTitle || '';
+        document.getElementById('input-lat').value = state.lat;
+        document.getElementById('input-lng').value = state.lng;
+        document.getElementById('check-auto-mincha').checked = !!state.autoMincha;
+        document.getElementById('input-mincha-offset').value = state.minchaOffset || 25;
+        
+        document.getElementById('range-weekday-font').value = state.weekdayFontSize || 1.1;
+        document.getElementById('weekday-font-val').innerText = state.weekdayFontSize || 1.1;
+        document.getElementById('range-weekday-row').value = state.weekdayRowSpacing || 10;
+        document.getElementById('weekday-row-val').innerText = state.weekdayRowSpacing || 10;
+        document.getElementById('check-weekday-bold').checked = !!state.weekdayBold;
+
+        document.getElementById('input-shabbat-parasha').value = state.shabbat.parasha || '';
+        document.getElementById('input-shabbat-haftara').value = state.shabbat.haftara || '';
+        document.getElementById('range-shabbat-font').value = state.shabbatFontSize || 1.1;
+        document.getElementById('shabbat-font-val').innerText = state.shabbatFontSize || 1.1;
+
+        document.getElementById('input-slide-interval').value = state.slideInterval || 10;
+
+        updateMinchaStatusText();
+        renderAdminWeekdayTimes();
+        renderAdminFridayTimes();
+        renderAdminSaturdayTimes();
+        renderAdminSlidesSequence();
+    }
+
+    function renderAdminWeekdayTimes() {
+        const container = document.getElementById('admin-weekday-times-container');
+        container.innerHTML = state.weekdayTimes.map((t, i) => `
+            <div class="admin-item-row">
+                <input type="text" value="${t.name}" onchange="state.weekdayTimes[${i}].name = this.value; backgroundSave();" placeholder="שם תפילה">
+                <input type="text" value="${t.time}" onchange="state.weekdayTimes[${i}].time = this.value; backgroundSave();" style="width: 120px;" placeholder="שעה">
+                <button class="btn-action" style="background:#e53e3e; margin:0;" onclick="removeWeekdayTime(${i})">🗑️</button>
+            </div>
+        `).join('');
+    }
+
+    function addWeekdayTime() {
+        state.weekdayTimes.push({ name: "תפילה חדשה", time: "00:00" });
+        backgroundSave();
+        renderAdminWeekdayTimes();
+    }
+
+    function removeWeekdayTime(i) {
+        state.weekdayTimes.splice(i, 1);
+        backgroundSave();
+        renderAdminWeekdayTimes();
+    }
+
+    function renderAdminFridayTimes() {
+        const container = document.getElementById('admin-friday-times-container');
+        container.innerHTML = state.shabbat.friday.map((f, i) => `
+            <div class="admin-item-row">
+                <input type="text" value="${f.event}" onchange="state.shabbat.friday[${i}].event = this.value; backgroundSave();" placeholder="אירוע">
+                <input type="text" value="${f.time}" onchange="state.shabbat.friday[${i}].time = this.value; backgroundSave();" style="width: 120px;" placeholder="שעה">
+                <button class="btn-action" style="background:#e53e3e; margin:0;" onclick="removeFridayTime(${i})">🗑️</button>
+            </div>
+        `).join('');
+    }
+
+    function addFridayTime() {
+        state.shabbat.friday.push({ event: "אירוע חדש", time: "00:00" });
+        backgroundSave();
+        renderAdminFridayTimes();
+    }
+
+    function removeFridayTime(i) {
+        state.shabbat.friday.splice(i, 1);
+        backgroundSave();
+        renderAdminFridayTimes();
+    }
+
+    function renderAdminSaturdayTimes() {
+        const container = document.getElementById('admin-saturday-times-container');
+        container.innerHTML = state.shabbat.saturday.map((s, i) => `
+            <div class="admin-item-row">
+                <input type="text" value="${s.event}" onchange="state.shabbat.saturday[${i}].event = this.value; backgroundSave();" placeholder="אירוע">
+                <input type="text" value="${s.time}" onchange="state.shabbat.saturday[${i}].time = this.value; backgroundSave();" style="width: 120px;" placeholder="שעה">
+                <button class="btn-action" style="background:#e53e3e; margin:0;" onclick="removeSaturdayTime(${i})">🗑️</button>
+            </div>
+        `).join('');
+    }
+
+    function addSaturdayTime() {
+        state.shabbat.saturday.push({ event: "אירוע חדש", time: "00:00" });
+        backgroundSave();
+        renderAdminSaturdayTimes();
+    }
+
+    function removeSaturdayTime(i) {
+        state.shabbat.saturday.splice(i, 1);
+        backgroundSave();
+        renderAdminSaturdayTimes();
+    }
+
+    function renderAdminSlidesSequence() {
+        const container = document.getElementById('admin-slides-sequence-container');
+        container.innerHTML = state.slidesSequence.map((item, i) => {
+            let headerTitle = '';
+            let borderColor = '#2b6cb0';
+            if (item.type === 'weekday') {
+                headerTitle = '📅 מסך תפילות יום חול';
+                borderColor = '#2b6cb0';
+            } else if (item.type === 'shabbat') {
+                headerTitle = '🕯️ מסך זמני שבת קודש';
+                borderColor = '#d69e2e';
+            } else if (item.type === 'custom') {
+                headerTitle = '🖼️ פינת תמונות מותאמת';
+                borderColor = '#319795';
+            }
+
+            return `
+            <div class="custom-slide-box" draggable="true" data-index="${i}" 
+                 ondragstart="onDragStart(event)" ondragover="onDragOver(event)" ondrop="onDrop(event, ${i})" ondragend="onDragEnd(event)"
+                 style="border-right: 4px solid ${borderColor};">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:${item.type === 'custom' ? '10px' : '0'};">
+                    <strong>⠿ ${headerTitle}</strong>
+                    <div>
+                        <button class="btn-action" style="margin:0; background:#e53e3e;" onclick="removeSlideFromSequence(${i})">🗑️ מחיקה</button>
+                    </div>
+                </div>
+                ${item.type === 'custom' ? `
+                    <div class="form-group" style="margin-top:8px;">
+                        <label>כותרת הפינה:</label>
+                        <input type="text" value="${item.title || ''}" onchange="state.slidesSequence[${i}].title = this.value; backgroundSave();">
+                    </div>
+                    <div class="form-group">
+                        <label>הוסף תמונות לפינה:</label>
+                        <input type="file" accept="image/*" multiple onchange="handleImageUpload(event, ${i})">
+                    </div>
+                    <div>
+                        ${(item.images || []).map((img, imgIdx) => `
+                            <div class="img-thumb-row" draggable="true" 
+                                 ondragstart="onImgDragStart(event, ${i}, ${imgIdx})" 
+                                 ondragover="onDragOver(event)" 
+                                 ondrop="onImgDrop(event, ${i}, ${imgIdx})" 
+                                 ondragend="onImgDragEnd(event)">
+                                <div style="display: flex; align-items: center; gap: 10px;">
+                                    <span>⠿</span>
+                                    <img src="${img}" style="width: 45px; height: 35px; object-fit: cover; border-radius: 4px; border: 1px solid #cbd5e0;">
+                                    <span style="font-weight: 500;">תמונה ${imgIdx + 1}</span>
+                                </div>
+                                <button class="btn-action" style="margin:0; background:#e53e3e; padding: 2px 8px;" onclick="removeCustomImage(${i}, ${imgIdx})">מחק תמונה</button>
+                            </div>
+                        `).join('')}
+                    </div>
+                ` : ''}
+            </div>`;
+        }).join('');
+    }
+
+    let draggedIndex = null;
+    function onDragStart(e) {
+        draggedIndex = parseInt(e.currentTarget.getAttribute('data-index'));
+        e.currentTarget.classList.add('dragging');
+        e.stopPropagation();
+    }
+    function onDragOver(e) {
+        e.preventDefault();
+    }
+    function onDrop(e, targetIndex) {
+        e.preventDefault();
+        e.stopPropagation();
+        if (draggedIndex === null || draggedIndex === targetIndex) return;
+        const movedItem = state.slidesSequence.splice(draggedIndex, 1)[0];
+        state.slidesSequence.splice(targetIndex, 0, movedItem);
+        draggedIndex = null;
+        backgroundSave();
+        renderAdminSlidesSequence();
+    }
+    function onDragEnd(e) {
+        e.currentTarget.classList.remove('dragging');
+        draggedIndex = null;
+    }
+
+    let draggedImgSlideIdx = null;
+    let draggedImgIdx = null;
+
+    function onImgDragStart(e, slideIdx, imgIdx) {
+        draggedImgSlideIdx = slideIdx;
+        draggedImgIdx = imgIdx;
+        e.currentTarget.classList.add('dragging');
+        e.stopPropagation();
+    }
+
+    function onImgDrop(e, targetSlideIdx, targetImgIdx) {
+        e.preventDefault();
+        e.stopPropagation();
+        if (draggedImgSlideIdx !== targetSlideIdx || draggedImgIdx === null || draggedImgIdx === targetImgIdx) return;
+        
+        let images = state.slidesSequence[targetSlideIdx].images;
+        const movedImg = images.splice(draggedImgIdx, 1)[0];
+        images.splice(targetImgIdx, 0, movedImg);
+        
+        draggedImgSlideIdx = null;
+        draggedImgIdx = null;
+        backgroundSave();
+        renderAdminSlidesSequence();
+    }
+
+    function onImgDragEnd(e) {
+        e.currentTarget.classList.remove('dragging');
+        draggedImgSlideIdx = null;
+        draggedImgIdx = null;
+    }
+
+    async function handleImageUpload(event, slideIndex) {
+        const files = event.target.files;
+        if (!files || files.length === 0) return;
+
+        if (!state.slidesSequence[slideIndex].images) {
+            state.slidesSequence[slideIndex].images = [];
+        }
+
+        for (let file of files) {
+            try {
+                const compressedBase64 = await compressImage(file, 1920, 0.80);
+                state.slidesSequence[slideIndex].images.push(compressedBase64);
+            } catch(e) {
+                console.error("שגיאה בדחיסת התמונה", e);
+            }
+        }
+
+        backgroundSave();
+        renderAdminSlidesSequence();
+    }
+
+    function removeCustomImage(slideIndex, imgIndex) {
+        state.slidesSequence[slideIndex].images.splice(imgIndex, 1);
+        backgroundSave();
+        renderAdminSlidesSequence();
+    }
+
+    function addCustomSlide() {
+        state.slidesSequence.push({
+            uniqueId: Date.now(),
+            type: 'custom',
+            title: "פינה חדשה",
+            fontSize: "2.3rem",
+            fontColor: "#1a365d",
+            images: []
+        });
+        backgroundSave();
+        renderAdminSlidesSequence();
+    }
+
+    function duplicateSlideType(type) {
+        state.slidesSequence.push({
+            uniqueId: Date.now(),
+            type: type
+        });
+        backgroundSave();
+        renderAdminSlidesSequence();
+    }
+
+    function removeSlideFromSequence(index) {
+        if (state.slidesSequence.length <= 1) {
+            alert("חייבת להישאר לפחות שקופית אחת בלוח!");
+            return;
+        }
+        state.slidesSequence.splice(index, 1);
+        backgroundSave();
+        renderAdminSlidesSequence();
+    }
+
+    window.onload = initApp;
+</script>
+</body>
+</html>
