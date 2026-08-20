@@ -1252,7 +1252,17 @@
         backgroundSave();
         renderAdminSlidesSequence();
     }
+async function updateSlideTitleWithParsha(sIdx) {
+    const today = new Date();
+    // מציאת יום שבת הקרוב אם היום לא שבת
+    const daysUntilSaturday = (6 - today.getDay() + 7) % 7;
+    const saturday = new Date(today);
+    saturday.setDate(today.getDate() + daysUntilSaturday);
 
+    const parshaName = await getParshaForDate(saturday);
+    state.slidesSequence[sIdx].title = parshaName; // עדכון שם הפינה לפרשה
+    saveAndRender(); // שמירה ורענון התצוגה
+}
     window.onload = initApp;
 </script>
 </body>
