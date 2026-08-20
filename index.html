@@ -582,13 +582,13 @@
     function checkAndSetAutoParasha() {
         if (!state.autoParasha) return;
         
-        const now = new Date();
+        const now = new Date(2026-09-02);
         const dStr = now.toISOString().split('T')[0];
         
         let pName = "פרשת כי תצא";
         let hName = "הפטרה: רני עקרה (ישעיהו נ\"ד)";
 
-        if (dStr >= "2026-08-30" && dStr <= "2026-09-06") {
+        if (dStr >= "2026-08-23" && dStr <= "2026-08-29") {
             pName = "פרשת כי תצא";
             hName = "הפטרה: רני עקרה (ישעיהו נ\"ד)";
         } else if (dStr >= "2026-08-30" && dStr <= "2026-09-05") {
