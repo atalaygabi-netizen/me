@@ -605,24 +605,27 @@ async function checkAndSetAutoParasha() {
 
     const parashaItem = data.items.find(item => item.category === 'parashat');
     
-    if (parashaItem) {
-      // עדכון הפרשה וההפטרה במיקומים הנכונים ב-state
-      const parashaName = parashaItem.hebrew || parashaItem.title;
-      state.shabbat.parasha = `פרשת ${parashaName}`;
-      
-      if (parashaItem.haftara) {
-        const haftarot = {
-  "כי תבוא": "קומִי אוֹרִי כִּי בָא אוֹרֵךְ (ישעיהו ס')",
-  "כי תצא": "רָנִּי עֲקָרָה לֹא יָלָדָה (ישעיהו נ\"ד)",
-  "נצבים": "שׁוֹשׂ אָשִׂישׂ בַּה' (ישעיהו ס\"א)",
-  "וילך": "שׁוּבָה יִשְׂרָאֵל עַד ה' (הושע י\"ד)",
-  "האזינו": "וַיְדַבֵּר דָּוִד לַה' (שמואל ב' כ\"ב)"
-};
+   if (parashaItem) {
+      // 1. חילוץ שם הפרשה הנקי
+      const rawName = parashaItem.hebrew || parashaItem.title || '';
+      const cleanName = rawName.replace(/פרשת|פַּרָשַׁת/g, '').replace(/[\u0591-\u05C7]/g, '').trim();
 
-const cleanName = parashaName.trim();
-state.shabbat.haftara = `הפטרה: ${haftarot[cleanName] || parashaItem.haftara || ''}`;
+      // 2. עדכון הפרשה ב-state
+      state.shabbat.parasha = `פרשת ${cleanName}`;
+
+      // 3. מיפוי ההפטרה בעברית
+      const haftarot = {
+        "כי תצא": "רָנִּי עֲקָרָה לֹא יָלָדָה (ישעיהו נד)",
+        "כי תבוא": "קוּמִי אוֹרִי כִּי בָא אוֹרֵךְ (ישעיהו ס)",
+        "נצבים": "שׁוֹשׁ אָשִׂישׂ בַּה' (ישעיהו סא)",
+        "וילך": "שׁוּבָה יִשְׂרָאֵל עַד ה' (הושע יד)",
+        "האזינו": "וַיְדַבֵּר דָּוִד לַה' (שמואל ב כב)"
+      };
+
+      if (parashaItem.haftara) {
+        state.shabbat.haftara = `הפטרה: ${haftarot[cleanName] || parashaItem.haftara || ''}`;
       }
-      
+    }  
       
    
     }
