@@ -824,9 +824,11 @@ function checkAndSetAutoParasha() {
                             <h3 style="font-size: 1.6rem; margin-bottom: 15px;">סדר התפילות</h3>
                             ${state.weekdayTimes.map(t => {
                                 let displayTime = t.time;
-                                if (t.name.includes('מנחה') && state.autoMincha) {
-                                    displayTime = minchaCalculated;
-                                }
+                          if (t.name.includes('מנחה') && state.autoMincha) {
+            displayTime = minchaCalculated;
+          } else if (t.name.includes('ערבית') && state.autoMincha) {
+            displayTime = arvitCalculated;
+          }  
                                 return `<div class="time-row"><span style="${boldStyle}">${t.name}</span><strong>${displayTime}</strong></div>`;
                             }).join('')}
                         </div>
