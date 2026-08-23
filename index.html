@@ -586,28 +586,14 @@
 
 async function checkAndSetAutoParasha() {
   try {
-    const today = new Date();
-    const dayOfWeek = today.getDay(); // 0 = ראשון, 6 = שבת
-
-    // מיום ראשון עד שישי מחשבים ימים עד לשבת הקרובה. בשבת עצמה נשארים בשבת (0 ימים).
-    const daysUntilSaturday = (dayOfWeek === 6) ? 0 : (6 - dayOfWeek);
-
-    const nextSaturday = new Date(today);
-    nextSaturday.setDate(today.getDate() + daysUntilSaturday);
-
-    const year = nextSaturday.getFullYear();
-    const month = String(nextSaturday.getMonth() + 1).padStart(2, '0');
-    const day = String(nextSaturday.getDate()).padStart(2, '0');
-    const dateStr = `${year}-${month}-${day}`;
-
-    // שליפת הפרשה וההפטרה המדויקת של השבת הקרובה לפי תאריך
-    const response = await fetch(`https://www.hebcal.com/hebcal?v=1&cfg=json&parasha=on&start=${dateStr}&end=${dateStr}`);
+    // קריאה מדויקת ל-Hebcal לפי מיקום ישראל - מחזיר תמיד את השבת הקרובה
+    const response = await fetch(`https://www.hebcal.com/shabbat?cfg=json&geonameid=281184&m=0&lang=he`);
     const data = await response.json();
 
     const parashaItem = data.items.find(item => item.category === 'parashat');
 
     if (parashaItem) {
-      // ניקוי שם הפרשה
+      // ניקוי שם הפרשה מניקוד וממילים עודפות
       const rawName = parashaItem.hebrew || parashaItem.title || '';
       const cleanName = rawName.replace(/פרשת|פרשה/g, '').replace(/[\u0591-\u05C7]/g, '').trim();
 
