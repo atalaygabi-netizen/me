@@ -580,7 +580,9 @@
         renderBoard();
         startSlideRotation();
         setupKeyboardNavigation();
+    checkAndSetAutoParasha();
     }
+    
 
 async function checkAndSetAutoParasha() {
   try {
@@ -612,7 +614,7 @@ async function checkAndSetAutoParasha() {
         state.shabbat.haftara = `הפטרה: ${parashaItem.haftara}`;
       }
       
-      saveState();
+      
       if (typeof renderBoard === 'function') {
         renderBoard();
       }
