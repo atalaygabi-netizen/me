@@ -1509,11 +1509,18 @@ async function checkAndSetAutoParasha() {
         const now = new Date();
         const parashot = data.items.filter(item => item.category === 'parashat');
         
+        // מוצא את הפרשה שהתאריך שלה הוא הקרוב ביותר להיום קדימה (השבת הקרובה או החולפת השבוע)
         let sedraItem = parashot.find(item => {
             const itemDate = new Date(item.date);
             const diffDays = (itemDate - now) / (1000 * 60 * 60 * 24);
-            return diffDays >= -6;
+            // מחפש את השבת הנוכחית או השבת הקרובה ביותר בעתיד הקרוב (טווח של עד 6 ימים אחורה וקדימה)
+            return diffDays >= -2 && diffDays <= 7;
         });
+
+        // אם לא נמצא בטווח המדויק, ניקח את הראשונה שגדולה מהיום
+        if (!sedraItem) {
+            sedraItem = parashot.find(item => new Date(item.date) >= now);
+        }
 
         if (!sedraItem && parashot.length > 0) {
             sedraItem = parashot[0];
@@ -1537,10 +1544,10 @@ async function checkAndSetAutoParasha() {
 
 function getHaftarahForParasha(parashaTitle) {
     const title = String(parashaTitle || '');
-    if (title.includes('כי תבוא') || title.includes('תבוא') || title.includes('Ki Tavo')) {
+    if (title.includes('תבוא') || title.includes('Ki Tavo')) {
         return '“קומי אורי כי בא אורך” (ישעיהו ס\', א\'-כב\')';
     }
-    if (title.includes('כי תצא') || title.includes('תצא') || title.includes('Ki Seitzei')) {
+    if (title.includes('תצא') || title.includes('Ki Seitzei')) {
         return 'רָנִּי עֲקָרָה לֹא יָלָדָה (ישעיהו נד)';
     }
     if (title.includes('נצבים') || title.includes('Nitzavim')) {
