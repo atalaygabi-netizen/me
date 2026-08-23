@@ -582,26 +582,44 @@
         setupKeyboardNavigation();
     }
 
-function checkAndSetAutoParasha() {
-  const now = new Date();
-  const dStr = now.toISOString().split('T')[0];
+async function checkAndSetAutoParasha() {
+  try {
+    const today = new Date();
+    const dayOfWeek = today.getDay(); // 0 = ראשון, 6 = שבת
+    
+    // מיום ראשון (0) ועד שישי (5) מוסיפים ימים כדי להגיע לשבת (6). בשבת (6) נשארים בשבת הנוכחית.
+    const daysUntilSaturday = (dayOfWeek === 6) ? 0 : (6 - dayOfWeek);
+    
+    const nextSaturday = new Date(today);
+    nextSaturday.setDate(today.getDate() + daysUntilSaturday);
+    
+    const year = nextSaturday.getFullYear();
+    const month = String(nextSaturday.getMonth() + 1).padStart(2, '0');
+    const day = String(nextSaturday.getDate()).padStart(2, '0');
 
-  let pName = "פרשת כי תצא";
-  let hName = 'הפטרה: רני עקרה (ישעיהו נ"ד)';
+    // שליפת הנתונים בלייב מ-Hebcal כולל פרשה והפטרה בעברית
+    const response = await fetch(`https://www.hebcal.com/shabbat?cfg=json&gy=${year}&gm=${month}&gd=${day}&lang=he&b=18`);
+    const data = await response.json();
 
- if (dStr >= "2026-08-22" && dStr <= "2026-08-28") {
-    pName = "פרשת כי תצא";
-    hName = 'הפטרה: רני עקרה (ישעיהו נ"ד)';
-  } else if (dStr >= "2026-08-29" && dStr <= "2026-09-04") {
-    pName = "פרשת כי תבוא";
-    hName = 'הפטרה: קומי אורי (ישעיהו ס\')';
-  } else if (dStr >= "2026-09-05" && dStr <= "2026-09-11") {
-    pName = "פרשת נצבים - וילך";
-    hName = 'הפטרה: שוש אשיש (ישעיהו ס"א)';
+    const parashaItem = data.items.find(item => item.category === 'parashat');
+    
+    if (parashaItem) {
+      // עדכון הפרשה וההפטרה במיקומים הנכונים ב-state
+      const parashaName = parashaItem.hebrew || parashaItem.title;
+      state.shabbat.parasha = `פרשת ${parashaName}`;
+      
+      if (parashaItem.haftara) {
+        state.shabbat.haftara = `הפטרה: ${parashaItem.haftara}`;
+      }
+      
+      saveState();
+      if (typeof renderBoard === 'function') {
+        renderBoard();
+      }
+    }
+  } catch (error) {
+    console.error("שגיאה בטעינת הפרשה וההפטרה האוטומטית:", error);
   }
-
-  state.shabbat.parasha = pName;
-  state.shabbat.haftara = hName;
 }
 
 
