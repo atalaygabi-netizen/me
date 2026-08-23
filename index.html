@@ -1506,19 +1506,26 @@ async function checkAndSetAutoParasha() {
         const response = await fetch("https://www.hebcal.com/hebcal?v=1&cfg=json&geonameid=281184&s=on");
         const data = await response.json();
         
-        const todayStr = new Date().toISOString().split('T')[0];
+        const now = new Date();
         const parashot = data.items.filter(item => item.category === 'parashat');
         
-        let sedraItem = parashot.find(item => item.date >= todayStr);
+        // מוצא את הפרשה שהשבת שלה היא הקרובה ביותר להיום (כולל ימי חול של אותו שבוע)
+        let sedraItem = parashot.find(item => {
+            const itemDate = new Date(item.date);
+            // הפרשה הראשונה שהשבת שלה טרם עברה או חלה השבוע (טווח של 6 ימים אחורה)
+            const diffDays = (itemDate - now) / (1000 * 60 * 60 * 24);
+            return diffDays >= -6;
+        });
+
         if (!sedraItem && parashot.length > 0) {
-            sedraItem = parashot[parashot.length - 1];
+            sedraItem = parashot[0];
         }
         
         if (sedraItem) {
             const parashaHebrew = sedraItem.hebrew || sedraItem.title;
             state.shabbat.parasha = parashaHebrew;
             
-            const haftarahName = getHaftarahForParasha(sedraItem.title || sedraItem.hebrew);
+            const haftarahName = getHaftarahForParasha(sedraItem.title || sedraItem.hebrew || '');
             state.shabbat.haftara = `הפטרה: ${haftarahName}`;
 
             if (typeof saveToLocalStorage === 'function') {
@@ -1528,25 +1535,6 @@ async function checkAndSetAutoParasha() {
     } catch (error) {
         console.error("שגיאה בעדכון פרשת השבוע:", error);
     }
-}
-
-function getHaftarahForParasha(parashaTitle) {
-    if (parashaTitle.includes('כי תבוא') || parashaTitle.includes('תבוא')) {
-        return '“קומי אורי כי בא אורך” (ישעיהו ס\', א\'-כב\')';
-    }
-    if (parashaTitle.includes('כי תצא') || parashaTitle.includes('תצא')) {
-        return 'רָנִּי עֲקָרָה לֹא יָלָדָה (ישעיהו נד)';
-    }
-    if (parashaTitle.includes('נצבים')) {
-        return 'שׂוֹשׂ אָשִׂישׂ בַּה\' (ישעיהו סא)';
-    }
-    if (parashaTitle.includes('וילך')) {
-        return 'שׁוּבָה יִשְׂרָאֵל עַד ה\' (הושע יד)';
-    }
-    if (parashaTitle.includes('האזינו')) {
-        return 'וַיְדַבֵּר דָּוִד לַה\' (שמואל ב כב)';
-    }
-    return 'עדכן הפטרה';
 }
     window.onload = initApp;
 </script>
