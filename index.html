@@ -631,11 +631,12 @@ async function checkAndSetAutoParasha() {
       } else if (parashaItem.haftara) {
         state.shabbat.haftara = `הפטרה: ${parashaItem.haftara}`;
       }
-    }
+ }
   } catch (error) {
     console.error("שגיאה בטעינת הפרשה וההפטרה האוטומטית:", error);
   }
-}
+
+
 }
 
 
