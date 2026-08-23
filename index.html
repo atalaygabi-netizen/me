@@ -699,14 +699,16 @@
         applyStyles();
     }
 
-    function initApp() {
-        loadFromLocalStorage(false);
-        renderBoard();
-        startSlideRotation();
-        setupKeyboardNavigation();
-        setupLiveSync();
-        startLiveClock();
-    }
+    async function initApp() {
+    loadFromLocalStorage(false);
+    await checkAndSetAutoParasha();
+    renderBoard();
+    startSlideRotation();
+    setupKeyboardNavigation();
+    setupLiveSync();
+    startLiveClock();
+}
+        
 
     function startLiveClock() {
         const clockEl = document.getElementById('live-clock');
