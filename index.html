@@ -1509,10 +1509,8 @@ async function checkAndSetAutoParasha() {
         const now = new Date();
         const parashot = data.items.filter(item => item.category === 'parashat');
         
-        // מוצא את הפרשה שהשבת שלה היא הקרובה ביותר להיום (כולל ימי חול של אותו שבוע)
         let sedraItem = parashot.find(item => {
             const itemDate = new Date(item.date);
-            // הפרשה הראשונה שהשבת שלה טרם עברה או חלה השבוע (טווח של 6 ימים אחורה)
             const diffDays = (itemDate - now) / (1000 * 60 * 60 * 24);
             return diffDays >= -6;
         });
@@ -1535,6 +1533,26 @@ async function checkAndSetAutoParasha() {
     } catch (error) {
         console.error("שגיאה בעדכון פרשת השבוע:", error);
     }
+}
+
+function getHaftarahForParasha(parashaTitle) {
+    const title = String(parashaTitle || '');
+    if (title.includes('כי תבוא') || title.includes('תבוא') || title.includes('Ki Tavo')) {
+        return '“קומי אורי כי בא אורך” (ישעיהו ס\', א\'-כב\')';
+    }
+    if (title.includes('כי תצא') || title.includes('תצא') || title.includes('Ki Seitzei')) {
+        return 'רָנִּי עֲקָרָה לֹא יָלָדָה (ישעיהו נד)';
+    }
+    if (title.includes('נצבים') || title.includes('Nitzavim')) {
+        return 'שׂוֹשׂ אָשִׂישׂ בַּה\' (ישעיהו סא)';
+    }
+    if (title.includes('וילך') || title.includes('Vayeilech')) {
+        return 'שׁוּבָה יִשְׂרָאֵל עַד ה\' (הושע יד)';
+    }
+    if (title.includes('האזינו') || title.includes('Haazinu')) {
+        return 'וַיְדַבֵּר דָּוִד לַה\' (שמואל ב כב)';
+    }
+    return 'עדכן הפטרה';
 }
     window.onload = initApp;
 </script>
