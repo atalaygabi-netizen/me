@@ -595,7 +595,7 @@ async function checkAndSetAutoParasha() {
     if (parashaItem) {
       // ניקוי שם הפרשה מניקוד וממילים עודפות
       const rawName = parashaItem.hebrew || parashaItem.title || '';
-      const cleanName = rawName.replace(/פרשת|פרשה/g, '').replace(/[\u0591-\u05C7]/g, '').trim();
+     const cleanName = rawName.replace(/פרשת|פרשה/g, '').replace(/[\u0591-\u05C7]/g, '').replace(/-/g, ' ').trim();
 
       // עדכון הפרשה ב-State
       state.shabbat.parasha = `פרשת ${cleanName}`;
