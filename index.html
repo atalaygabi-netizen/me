@@ -625,7 +625,11 @@ async function checkAndSetAutoParasha() {
       if (parashaItem.haftara) {
         state.shabbat.haftara = `הפטרה: ${haftarot[cleanName] || parashaItem.haftara || ''}`;
       }
-
+   }
+   } catch (error) {
+    console.error("שגיאה בטעינת הפרשה וההפטרה האוטומטית:", error);
+  }
+}
 
 
     async function compressImage(file, maxWidth = 1920, quality = 0.80) {
