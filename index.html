@@ -611,7 +611,16 @@ async function checkAndSetAutoParasha() {
       state.shabbat.parasha = `פרשת ${parashaName}`;
       
       if (parashaItem.haftara) {
-        state.shabbat.haftara = `הפטרה: ${parashaItem.haftara}`;
+        const haftarot = {
+  "כי תבוא": "קומִי אוֹרִי כִּי בָא אוֹרֵךְ (ישעיהו ס')",
+  "כי תצא": "רָנִּי עֲקָרָה לֹא יָלָדָה (ישעיהו נ\"ד)",
+  "נצבים": "שׁוֹשׂ אָשִׂישׂ בַּה' (ישעיהו ס\"א)",
+  "וילך": "שׁוּבָה יִשְׂרָאֵל עַד ה' (הושע י\"ד)",
+  "האזינו": "וַיְדַבֵּר דָּוִד לַה' (שמואל ב' כ\"ב)"
+};
+
+const cleanName = parashaName.trim();
+state.shabbat.haftara = `הפטרה: ${haftarot[cleanName] || parashaItem.haftara || ''}`;
       }
       
       
