@@ -600,7 +600,7 @@ async function checkAndSetAutoParasha() {
     const day = String(nextSaturday.getDate()).padStart(2, '0');
 
     // שליפת הנתונים מ-Hebcal לפי התאריך של השבת הקרובה
-    const response = await fetch(`https://www.hebcal.com/shabbat?cfg=json&gy=${year}&gm=${month}&gd=${day}&lang=he&b=18`);
+   const response = await fetch(`https://www.hebcal.com/shabbat?cfg=json&gy=${year}&gm=${month}&gd=${day}&lang=he&b=18&g3offset=1`);
     const data = await response.json();
 
     // מציאת הפריט של הפרשה מתוך התשובה
