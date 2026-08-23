@@ -574,14 +574,13 @@
         applyStyles();
     }
 
-    function initApp() {
-        loadFromLocalStorage();
-        checkAndSetAutoParasha();
-        renderBoard();
-        startSlideRotation();
-        setupKeyboardNavigation();
-  
-    }
+    async function initApp() {
+  await checkAndSetAutoParasha();
+  loadFromLocalStorage();
+  renderBoard();
+  startSlideRotation();
+  setupKeyboardNavigation();
+}
     
 async function checkAndSetAutoParasha() {
   try {
