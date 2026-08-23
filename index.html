@@ -581,28 +581,27 @@
         setupKeyboardNavigation();
     }
 
- function checkAndSetAutoParasha() {
-  const now = new Date("2026-09-02");
+function checkAndSetAutoParasha() {
+  const now = new Date();
   const dStr = now.toISOString().split('T')[0];
 
   let pName = "פרשת כי תצא";
-  let hName = "הפטרה: רני עקרה (ישעיהו נ\"ד)";
+  let hName = 'הפטרה: רני עקרה (ישעיהו נ"ד)';
 
   if (dStr >= "2026-08-23" && dStr <= "2026-08-29") {
     pName = "פרשת כי תצא";
-    hName = "הפטרה: רני עקרה (ישעיהו נ\"ד)";
+    hName = 'הפטרה: רני עקרה (ישעיהו נ"ד)';
   } else if (dStr >= "2026-08-30" && dStr <= "2026-09-05") {
     pName = "פרשת כי תבוא";
-    hName = "הפטרה: קומי אורי (ישעיהו ס')";
+    hName = 'הפטרה: קומי אורי (ישעיהו ס\')';
   } else if (dStr >= "2026-09-06" && dStr <= "2026-09-12") {
     pName = "פרשת נצבים - וילך";
-    hName = "הפטרה: שוש אשיש (ישעיהו ס\"א)";
+    hName = 'הפטרה: שוש אשיש (ישעיהו ס"א)';
   }
 
   state.shabbat.parasha = pName;
   state.shabbat.haftara = hName;
-
-
+}
 }
 
     async function compressImage(file, maxWidth = 1920, quality = 0.80) {
