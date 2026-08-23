@@ -764,14 +764,21 @@ function checkAndSetAutoParasha() {
         infoEl.innerText = `שעת מנחה לשבוע זה (מבוסס על שקיעת יום חמישי ${dateFormatted}): ${time}`;
     }
 
+    function addMinutesToTime(timeStr, mins) {
+  if (!timeStr || !timeStr.includes(':')) return '';
+  const [h, m] = timeStr.split(':').map(Number);
+  const d = new Date();
+  d.setHours(h, m + mins, 0);
+  return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
+}
     function renderBoard() {
         checkAndSetAutoParasha();
         applyStyles();
         const container = document.getElementById('presentationContainer');
         const sequence = state.slidesSequence || [];
         if (currentSlide >= sequence.length) currentSlide = 0;
-
         let minchaCalculated = state.autoMincha ? getWeeklyMinchaTime() : '';
+        let arvitCalculated = minchaCalculated ? addMinutesToTime(minchaCalculated, 40) : '';
         let html = '';
         let boldStyle = state.weekdayBold ? 'font-weight: bold;' : 'font-weight: normal;';
 
