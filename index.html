@@ -1499,7 +1499,47 @@
         if(window.notifyOtherTabs) window.notifyOtherTabs();
         renderAdminSlidesSequence();
     }
+async function checkAndSetAutoParasha() {
+    try {
+        const response = await fetch("https://www.hebcal.com/hebcal?v=1&cfg=json&geonameid=281184&s=on");
+        const data = await response.json();
+        
+        const sedraItem = data.items.find(item => item.category === 'parashat');
+        
+        if (sedraItem) {
+            const parashaHebrew = sedraItem.hebrew || sedraItem.title;
+            state.shabbat.parasha = parashaHebrew;
+            
+            const haftarahName = getHaftarahForParasha(sedraItem.title || sedraItem.hebrew);
+            state.shabbat.haftara = `הפטרה: ${haftarahName}`;
 
+            if (typeof saveToLocalStorage === 'function') {
+                saveToLocalStorage();
+            }
+        }
+    } catch (error) {
+        console.error("שגיאה בעדכון פרשת השבוע:", error);
+    }
+}
+
+function getHaftarahForParasha(parashaTitle) {
+    if (parashaTitle.includes('כי תבוא') || parashaTitle.includes('תבוא')) {
+        return '“קומי אורי כי בא אורך” (ישעיהו ס\', א\'-כב\')';
+    }
+    if (parashaTitle.includes('כי תצא') || parashaTitle.includes('תצא')) {
+        return 'רָנִּי עֲקָרָה לֹא יָלָדָה (ישעיהו נד)';
+    }
+    if (parashaTitle.includes('נצבים')) {
+        return 'שׂוֹשׂ אָשִׂישׂ בַּה\' (ישעיהו סא)';
+    }
+    if (parashaTitle.includes('וילך')) {
+        return 'שׁוּבָה יִשְׂרָאֵל עַד ה\' (הושע יד)';
+    }
+    if (parashaTitle.includes('האזינו')) {
+        return 'וַיְדַבֵּר דָּוִד לַה\' (שמואל ב כב)';
+    }
+    return 'עדכן הפטרה';
+}
     window.onload = initApp;
 </script>
 </body>
