@@ -1507,12 +1507,19 @@ async function checkAndSetAutoParasha() {
         const data = await response.json();
         
         const now = new Date();
+        const currentYearStr = now.getFullYear().toString(); // "2026"
+        const todayStr = now.toISOString().split('T')[0];
+        
         const parashot = data.items.filter(item => item.category === 'parashat');
         
-        // מוצא את הפרשה הראשונה שהתאריך שלה הוא מהיום והלאה
-        let sedraItem = parashot.find(item => new Date(item.date) >= now);
+        // מוצא את הפרשה של השנה הנוכחית שהתאריך שלה קרוב להיום או ע애ו
+        let sedraItem = parashot.find(item => item.date.startsWith(currentYearStr) && item.date >= todayStr);
         
-        // אם לא נמצא, ניקח את הראשונה ברשימה
+        // אם עברנו את השנה או לא נמצא, ניקח את הראשונה שמתאימה לשנה הנוכחית
+        if (!sedraItem) {
+            sedraItem = parashot.find(item => item.date.startsWith(currentYearStr));
+        }
+
         if (!sedraItem && parashot.length > 0) {
             sedraItem = parashot[0];
         }
