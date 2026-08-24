@@ -1,3 +1,5 @@
+
+
 <!DOCTYPE html>
 <html lang="he" dir="rtl">
 <head>
@@ -51,6 +53,7 @@
             color: white;
             display: flex;
             align-items: center;
+            justify-content: space-between;
             padding: 0 20px;
             z-index: 10000;
             backdrop-filter: blur(5px);
@@ -71,6 +74,16 @@
 
         #top-control-bar button:hover {
             opacity: 0.9;
+        }
+
+        #live-clock {
+            font-weight: bold;
+            font-size: 1.1rem;
+            background: rgba(0, 0, 0, 0.2);
+            padding: 2px 10px;
+            border-radius: 4px;
+            letter-spacing: 1px;
+            flex-shrink: 0;
         }
 
         /* פס התקדמות זמן למצגת */
@@ -167,21 +180,27 @@
             display: flex;
             align-items: center;
             box-shadow: 0 -2px 10px rgba(0,0,0,0.2);
+        }
+
+        .ticker-wrapper {
+            display: flex;
             white-space: nowrap;
+            width: 100%;
+            overflow: hidden;
         }
 
         .ticker-track {
-            display: inline-block;
+            display: inline-flex;
             white-space: nowrap;
             animation: tickerAnim linear infinite;
             font-size: var(--ticker-font-size);
             font-weight: 600;
-            padding-left: 100%;
+            will-change: transform;
         }
 
         @keyframes tickerAnim {
-            0% { transform: translateX(0); }
-            100% { transform: translateX(-50%); }
+            0% { transform: translateX(100vw); }
+            100% { transform: translateX(-100%); }
         }
 
         .modal {
@@ -363,7 +382,8 @@
 <body>
 
     <div id="top-control-bar">
-        <div id="topBarTitleArea" style="flex: 1; display: flex;">
+        <div id="live-clock">00:00:00</div>
+        <div id="topBarTitleArea" style="flex: 1; display: flex; margin: 0 15px;">
             <span id="topBarTitleText">לוח עדכונים לבית הכנסת</span>
         </div>
         <div>
@@ -379,7 +399,9 @@
     <div class="presentation-container" id="presentationContainer" onclick="handleScreenClick(event)"></div>
 
     <div id="bottom-ticker">
-        <div class="ticker-track" id="tickerTrackElement"></div>
+        <div class="ticker-wrapper">
+            <div class="ticker-track" id="tickerTrackElement"></div>
+        </div>
     </div>
 
     <!-- מודל בקשת סיסמה -->
@@ -417,7 +439,7 @@
                     </div>
                     <div style="display: flex; gap: 10px; flex-wrap: wrap;">
                         <div class="form-group" style="flex: 1; min-width: 150px;">
-                            <label>מיקום/יישור:</label>
+                            <label>מיקום/יישור כותרת:</label>
                             <select id="select-topbar-align" onchange="updateStateField('topBarAlign', this.value)">
                                 <option value="right">ימין</option>
                                 <option value="center">מרכז</option>
@@ -425,11 +447,11 @@
                             </select>
                         </div>
                         <div class="form-group" style="flex: 1; min-width: 150px;">
-                            <label>גודל כתב:</label>
+                            <label>גודל כתב כותרת:</label>
                             <input type="text" id="input-topbar-fontsize" placeholder="לדוגמה: 1.1rem" oninput="updateStateField('topBarFontSize', this.value)">
                         </div>
                         <div class="form-group" style="flex: 1; min-width: 150px;">
-                            <label>צבע כתב:</label>
+                            <label>צבע כתב כותרת:</label>
                             <input type="color" id="input-topbar-color" onchange="updateStateField('topBarColor', this.value)" style="height: 38px; padding: 2px;">
                         </div>
                     </div>
@@ -447,8 +469,8 @@
                             <input type="text" id="input-ticker-sep" placeholder="לדוגמה: ★ או *" oninput="updateStateField('tickerSeparator', this.value)">
                         </div>
                         <div class="form-group" style="flex: 1; min-width: 150px;">
-                            <label>מהירות ריצה (שניות):</label>
-                            <input type="number" id="input-ticker-speed" min="5" max="100" oninput="updateStateField('tickerSpeed', parseInt(this.value) || 25)">
+                            <label>מהירות ריצה (שניות לסבב):</label>
+                            <input type="number" id="input-ticker-speed" min="3" max="50" oninput="updateStateField('tickerSpeed', parseInt(this.value) || 12)">
                         </div>
                         <div class="form-group" style="flex: 1; min-width: 150px;">
                             <label>צבע רקע הסרט:</label>
@@ -467,19 +489,30 @@
                 </div>
 
                 <div style="background: #edf2f7; padding: 15px; border-radius: 8px; margin-bottom: 20px;">
-                    <h3 style="font-size: 1.1rem; margin-bottom: 10px; color: var(--primary-color);">חישוב מנחה שבועי (לפי שקיעת יום חמישי)</h3>
+                    <h3 style="font-size: 1.1rem; margin-bottom: 10px; color: var(--primary-color);">חישוב זמנים אוטומטי (שקיעה וזמני תפילה)</h3>
                     <div style="display:flex; gap:10px;">
                         <div class="form-group" style="flex:1;"><label>קו רוחב (Latitude):</label><input type="number" step="any" id="input-lat" oninput="updateStateField('lat', parseFloat(this.value))"></div>
                         <div class="form-group" style="flex:1;"><label>קו אורך (Longitude):</label><input type="number" step="any" id="input-lng" oninput="updateStateField('lng', parseFloat(this.value))"></div>
                     </div>
-                    <div class="form-group" style="display: flex; align-items: center; gap: 10px; margin-top: 10px;">
-                        <input type="checkbox" id="check-auto-mincha" style="width: auto;" onchange="updateStateField('autoMincha', this.checked)">
-                        <label for="check-auto-mincha" style="margin-bottom:0; cursor:pointer;">חשב מנחה אוטומטית שבועית</label>
+                    
+                    <div style="border-top: 1px solid #cbd5e0; margin-top: 10px; padding-top: 10px;">
+                        <div class="form-group" style="display: flex; align-items: center; gap: 10px;">
+                            <input type="checkbox" id="check-auto-mincha" style="width: auto;" onchange="updateStateField('autoMincha', this.checked)">
+                            <label for="check-auto-mincha" style="margin-bottom:0; cursor:pointer;">חשב מנחה אוטומטית שבועית (לפי שקיעת יום חמישי)</label>
+                        </div>
+                        <div class="form-group">
+                            <label>כמה דקות לפני השקיעה תפילת מנחה?</label>
+                            <input type="number" id="input-mincha-offset" style="width: 120px;" oninput="updateStateField('minchaOffset', parseInt(this.value) || 25)">
+                        </div>
                     </div>
-                    <div class="form-group">
-                        <label>כמה דקות לפני השקיעה תפילת מנחה?</label>
-                        <input type="number" id="input-mincha-offset" style="width: 120px;" oninput="updateStateField('minchaOffset', parseInt(this.value) || 25)">
+
+                    <div style="border-top: 1px solid #cbd5e0; margin-top: 10px; padding-top: 10px;">
+                        <div class="form-group" style="display: flex; align-items: center; gap: 10px;">
+                            <input type="checkbox" id="check-auto-arvit" style="width: auto;" onchange="updateStateField('autoArvit', this.checked)">
+                            <label for="check-auto-arvit" style="margin-bottom:0; cursor:pointer;">חשב ערבית אוטומטית (40 דקות אחרי תפילת מנחה)</label>
+                        </div>
                     </div>
+
                     <div id="mincha-status-info" style="font-size: 0.9rem; color: #2b6cb0; margin-top: 8px; font-weight: bold;"></div>
                 </div>
 
@@ -573,6 +606,7 @@
         lng: 34.996, 
         autoMincha: true, 
         minchaOffset: 25,
+        autoArvit: true,
         slideInterval: 10,
         weekdayFontSize: 1.1,
         weekdayRowSpacing: 10,
@@ -587,7 +621,7 @@
         topBarColor: "#ffffff",
         tickerText: "ברוכים הבאים לבית הכנסת • נא להקפיד על כיבוי פלאפונים בזמן התפילה • שבת שלום ומבורך!",
         tickerSeparator: "★",
-        tickerSpeed: 25,
+        tickerSpeed: 12,
         tickerBgColor: "#1a365d",
         tickerColor: "#ffffff",
         tickerFontSize: "1.2rem",
@@ -596,7 +630,7 @@
             { name: "שחרית ב'", time: "07:00" },
             { name: "שחרית ג'", time: "08:00" },
             { name: "מנחה", time: "Auto" },
-            { name: "ערבית", time: "20:30" }
+            { name: "ערבית", time: "Auto" }
         ],
         shabbat: {
             parasha: "פרשת שופטים",
@@ -624,30 +658,40 @@
     let slideTimer = null;
     let progressInterval = null;
     let slideStartTime = Date.now();
+    let lastSavedString = "";
 
     function saveToLocalStorage() {
         try {
-            localStorage.setItem('SynagogueBoardState', JSON.stringify(state));
+            let str = JSON.stringify(state);
+            localStorage.setItem('SynagogueBoardState', str);
+            lastSavedString = str;
         } catch(e) {
             console.warn("שגיאה בשמירה לזיכרון הדפדפן", e);
         }
     }
 
-    function loadFromLocalStorage() {
+    function loadFromLocalStorage(isBackgroundSync = false) {
         try {
             let saved = localStorage.getItem('SynagogueBoardState');
             if (saved) {
+                if (isBackgroundSync && saved === lastSavedString) {
+                    return; // אין שינוי חדש
+                }
                 let parsed = JSON.parse(saved);
                 state = Object.assign({}, state, parsed);
+                lastSavedString = saved;
                 if (!state.slidesSequence || state.slidesSequence.length === 0) {
                     state.slidesSequence = [
                         { uniqueId: 'w_default', type: 'weekday' },
                         { uniqueId: 's_default', type: 'shabbat' }
                     ];
                 }
+                if (isBackgroundSync) {
+                    renderBoard();
+                }
             }
         } catch(e) {
-            console.error("שגיאה בטעינת הזיכרון, משתמש בהגדרות ברירת מחדל", e);
+            console.error("שגיאה בטעינת הזיכרון", e);
         }
     }
 
@@ -658,10 +702,53 @@
     }
 
     function initApp() {
-        loadFromLocalStorage();
+        loadFromLocalStorage(false);
         renderBoard();
         startSlideRotation();
         setupKeyboardNavigation();
+        setupLiveSync();
+        startLiveClock();
+    }
+
+    function startLiveClock() {
+        const clockEl = document.getElementById('live-clock');
+        if (!clockEl) return;
+        
+        function updateClock() {
+            const now = new Date();
+            const timeString = now.toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+            clockEl.innerText = timeString;
+        }
+        
+        updateClock();
+        setInterval(updateClock, 1000);
+    }
+
+    function setupLiveSync() {
+        setInterval(() => {
+            let currentSaved = localStorage.getItem('SynagogueBoardState');
+            if (currentSaved && currentSaved !== lastSavedString) {
+                loadFromLocalStorage(true);
+            }
+        }, 1000);
+
+        setInterval(() => {
+            loadFromLocalStorage(true);
+        }, 60000);
+
+        if (window.BroadcastChannel) {
+            const bc = new BroadcastChannel('SynagogueBoard_Channel');
+            bc.onmessage = (event) => {
+                if (event.data === 'update') {
+                    loadFromLocalStorage(true);
+                }
+            };
+            window.notifyOtherTabs = () => {
+                bc.postMessage('update');
+            };
+        } else {
+            window.notifyOtherTabs = () => {};
+        }
     }
 
     async function compressImage(file, maxWidth = 1920, quality = 0.80) {
@@ -720,9 +807,9 @@
             let msg = state.tickerText || "";
             let sep = ` ${state.tickerSeparator || "★"} `;
             let fullText = msg + sep;
-            let repeated = (fullText).repeat(6);
+            let repeated = fullText.repeat(4);
             tickerTrack.innerText = repeated;
-            tickerTrack.style.animationDuration = (state.tickerSpeed || 25) + 's';
+            tickerTrack.style.animationDuration = (state.tickerSpeed || 12) + 's';
         }
     }
 
@@ -730,7 +817,8 @@
         state[field] = value;
         backgroundSave();
         renderBoard();
-        if(['lat', 'lng', 'minchaOffset', 'autoMincha'].includes(field)) {
+        if(window.notifyOtherTabs) window.notifyOtherTabs();
+        if(['lat', 'lng', 'minchaOffset', 'autoMincha', 'autoArvit'].includes(field)) {
             updateMinchaStatusText();
         }
     }
@@ -751,6 +839,7 @@
         state.shabbat[field] = value;
         backgroundSave();
         renderBoard();
+        if(window.notifyOtherTabs) window.notifyOtherTabs();
     }
 
     function getThursdayDate(date = new Date()) {
@@ -795,17 +884,41 @@
         }
     }
 
+    function getCalculatedArvitTime(minchaTimeString) {
+        if (!state.autoArvit) return state.weekdayTimes.find(t => t.name.includes('ערבית'))?.time || '20:00';
+        if (!minchaTimeString || minchaTimeString.includes(':') === false) return '20:00';
+
+        try {
+            let parts = minchaTimeString.split(':');
+            let hours = parseInt(parts[0], 10);
+            let minutes = parseInt(parts[1], 10);
+
+            let d = new Date();
+            d.setHours(hours, minutes + 40, 0, 0);
+
+            return d.toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit' });
+        } catch(e) {
+            return '20:00';
+        }
+    }
+
     function updateMinchaStatusText() {
         const infoEl = document.getElementById('mincha-status-info');
         if (!infoEl) return;
-        if (!state.autoMincha) {
-            infoEl.innerText = "חישוב אוטומטי מבוטל.";
-            return;
+        let textArr = [];
+        if (state.autoMincha) {
+            const thursday = getThursdayDate();
+            const dateFormatted = thursday.toLocaleDateString('he-IL');
+            const mTime = getWeeklyMinchaTime();
+            textArr.push(`שעת מנחה לשבוע זה (לפי שקיעת יום חמישי ${dateFormatted}): ${mTime}`);
+            if (state.autoArvit) {
+                const aTime = getCalculatedArvitTime(mTime);
+                textArr.push(`שעת ערבית אוטומטית (40 דק' אחרי מנחה): ${aTime}`);
+            }
+        } else {
+            textArr.push("חישוב מנחה אוטומטי מבוטל.");
         }
-        const thursday = getThursdayDate();
-        const dateFormatted = thursday.toLocaleDateString('he-IL');
-        const time = getWeeklyMinchaTime();
-        infoEl.innerText = `שעת מנחה לשבוע זה (מבוסס על שקיעת יום חמישי ${dateFormatted}): ${time}`;
+        infoEl.innerHTML = textArr.join('<br>');
     }
 
     function renderBoard() {
@@ -815,7 +928,7 @@
         if (currentSlide >= sequence.length) currentSlide = 0;
 
         let minchaCalculated = state.autoMincha ? getWeeklyMinchaTime() : '';
-        let html = '';
+        let arvitCalculated = state.autoArvit ? getCalculatedArvitTime(minchaCalculated) : '';
         let boldStyle = state.weekdayBold ? 'font-weight: bold;' : 'font-weight: normal;';
 
         let expandedSlides = [];
@@ -848,6 +961,8 @@
 
         if (currentSlide >= expandedSlides.length) currentSlide = 0;
 
+        let html = ''; // תוקן: הגדרת משתנה ה-html חסרה שהפילה את הקוד
+
         expandedSlides.forEach((item, index) => {
             let isActive = (index === currentSlide) ? 'active' : '';
 
@@ -862,6 +977,8 @@
                                 let displayTime = t.time;
                                 if (t.name.includes('מנחה') && state.autoMincha) {
                                     displayTime = minchaCalculated;
+                                } else if (t.name.includes('ערבית') && state.autoArvit) {
+                                    displayTime = arvitCalculated;
                                 }
                                 return `<div class="time-row"><span style="${boldStyle}">${t.name}</span><strong>${displayTime}</strong></div>`;
                             }).join('')}
@@ -869,7 +986,6 @@
                     </div>
                 </div>`;
             } else if (item.type === 'shabbat') {
-                // חישוב גודל כתב וריווח דינמיים לפי כמות הכרטיסיות כדי שייכנס תמיד במסך אחד בלי גלילה
                 let fridayCount = (state.shabbat.friday || []).length;
                 let saturdayCount = (state.shabbat.saturday || []).length;
                 let totalCards = fridayCount + saturdayCount;
@@ -1091,7 +1207,7 @@
         
         document.getElementById('input-ticker-text').value = state.tickerText || '';
         document.getElementById('input-ticker-sep').value = state.tickerSeparator || '★';
-        document.getElementById('input-ticker-speed').value = state.tickerSpeed || 25;
+        document.getElementById('input-ticker-speed').value = state.tickerSpeed || 12;
         document.getElementById('input-ticker-bg').value = state.tickerBgColor || '#1a365d';
         document.getElementById('input-ticker-color').value = state.tickerColor || '#ffffff';
 
@@ -1100,6 +1216,7 @@
         document.getElementById('input-lng').value = state.lng;
         document.getElementById('check-auto-mincha').checked = !!state.autoMincha;
         document.getElementById('input-mincha-offset').value = state.minchaOffset || 25;
+        document.getElementById('check-auto-arvit').checked = !!state.autoArvit;
         
         document.getElementById('range-weekday-font').value = state.weekdayFontSize || 1.1;
         document.getElementById('weekday-font-val').innerText = state.weekdayFontSize || 1.1;
@@ -1123,8 +1240,8 @@
         const container = document.getElementById('admin-weekday-times-container');
         container.innerHTML = state.weekdayTimes.map((t, i) => `
             <div class="admin-item-row">
-                <input type="text" value="${t.name}" onchange="state.weekdayTimes[${i}].name = this.value; backgroundSave();" placeholder="שם תפילה">
-                <input type="text" value="${t.time}" onchange="state.weekdayTimes[${i}].time = this.value; backgroundSave();" style="width: 120px;" placeholder="שעה">
+                <input type="text" value="${t.name}" onchange="state.weekdayTimes[${i}].name = this.value; backgroundSave(); if(window.notifyOtherTabs) window.notifyOtherTabs();" placeholder="שם תפילה">
+                <input type="text" value="${t.time}" onchange="state.weekdayTimes[${i}].time = this.value; backgroundSave(); if(window.notifyOtherTabs) window.notifyOtherTabs();" style="width: 120px;" placeholder="שעה">
                 <button class="btn-action" style="background:#e53e3e; margin:0;" onclick="removeWeekdayTime(${i})">🗑️</button>
             </div>
         `).join('');
@@ -1133,12 +1250,14 @@
     function addWeekdayTime() {
         state.weekdayTimes.push({ name: "תפילה חדשה", time: "00:00" });
         backgroundSave();
+        if(window.notifyOtherTabs) window.notifyOtherTabs();
         renderAdminWeekdayTimes();
     }
 
     function removeWeekdayTime(i) {
         state.weekdayTimes.splice(i, 1);
         backgroundSave();
+        if(window.notifyOtherTabs) window.notifyOtherTabs();
         renderAdminWeekdayTimes();
     }
 
@@ -1146,8 +1265,8 @@
         const container = document.getElementById('admin-friday-times-container');
         container.innerHTML = state.shabbat.friday.map((f, i) => `
             <div class="admin-item-row">
-                <input type="text" value="${f.event}" onchange="state.shabbat.friday[${i}].event = this.value; backgroundSave();" placeholder="אירוע">
-                <input type="text" value="${f.time}" onchange="state.shabbat.friday[${i}].time = this.value; backgroundSave();" style="width: 120px;" placeholder="שעה">
+                <input type="text" value="${f.event}" onchange="state.shabbat.friday[${i}].event = this.value; backgroundSave(); if(window.notifyOtherTabs) window.notifyOtherTabs();" placeholder="אירוע">
+                <input type="text" value="${f.time}" onchange="state.shabbat.friday[${i}].time = this.value; backgroundSave(); if(window.notifyOtherTabs) window.notifyOtherTabs();" style="width: 120px;" placeholder="שעה">
                 <button class="btn-action" style="background:#e53e3e; margin:0;" onclick="removeFridayTime(${i})">🗑️</button>
             </div>
         `).join('');
@@ -1156,12 +1275,14 @@
     function addFridayTime() {
         state.shabbat.friday.push({ event: "אירוע חדש", time: "00:00" });
         backgroundSave();
+        if(window.notifyOtherTabs) window.notifyOtherTabs();
         renderAdminFridayTimes();
     }
 
     function removeFridayTime(i) {
         state.shabbat.friday.splice(i, 1);
         backgroundSave();
+        if(window.notifyOtherTabs) window.notifyOtherTabs();
         renderAdminFridayTimes();
     }
 
@@ -1169,8 +1290,8 @@
         const container = document.getElementById('admin-saturday-times-container');
         container.innerHTML = state.shabbat.saturday.map((s, i) => `
             <div class="admin-item-row">
-                <input type="text" value="${s.event}" onchange="state.shabbat.saturday[${i}].event = this.value; backgroundSave();" placeholder="אירוע / שיעור">
-                <input type="text" value="${s.time}" onchange="state.shabbat.saturday[${i}].time = this.value; backgroundSave();" style="width: 120px;" placeholder="שעה">
+                <input type="text" value="${s.event}" onchange="state.shabbat.saturday[${i}].event = this.value; backgroundSave(); if(window.notifyOtherTabs) window.notifyOtherTabs();" placeholder="אירוע / שיעור">
+                <input type="text" value="${s.time}" onchange="state.shabbat.saturday[${i}].time = this.value; backgroundSave(); if(window.notifyOtherTabs) window.notifyOtherTabs();" style="width: 120px;" placeholder="שעה">
                 <button class="btn-action" style="background:#e53e3e; margin:0;" onclick="removeSaturdayTime(${i})">🗑️</button>
             </div>
         `).join('');
@@ -1179,12 +1300,14 @@
     function addSaturdayTime() {
         state.shabbat.saturday.push({ event: "שיעור חדש", time: "00:00" });
         backgroundSave();
+        if(window.notifyOtherTabs) window.notifyOtherTabs();
         renderAdminSaturdayTimes();
     }
 
     function removeSaturdayTime(i) {
         state.shabbat.saturday.splice(i, 1);
         backgroundSave();
+        if(window.notifyOtherTabs) window.notifyOtherTabs();
         renderAdminSaturdayTimes();
     }
 
@@ -1227,10 +1350,10 @@
                 ${item.type === 'custom' ? `
                     <div class="form-group" style="margin-top:8px;">
                         <label>כותרת הפינה:</label>
-                        <input type="text" value="${item.title || ''}" onchange="state.slidesSequence[${i}].title = this.value; backgroundSave();">
+                        <input type="text" value="${item.title || ''}" onchange="state.slidesSequence[${i}].title = this.value; backgroundSave(); if(window.notifyOtherTabs) window.notifyOtherTabs();">
                     </div>
                     <div class="form-group">
-                        <label>הוסף תמונות לפינה:</label>
+                        <label>הוסף תמונות לפינה (ניתן לבחור כמה תמונות יחד במסך הבחירה):</label>
                         <input type="file" accept="image/*" multiple onchange="handleImageUpload(event, ${i})">
                     </div>
                     <div>
@@ -1278,6 +1401,7 @@
         state.slidesSequence.splice(targetIndex, 0, movedItem);
         draggedIndex = null;
         backgroundSave();
+        if(window.notifyOtherTabs) window.notifyOtherTabs();
         renderAdminSlidesSequence();
     }
     function onDragEnd(e) {
@@ -1302,13 +1426,17 @@
             }
         }
 
+        event.target.value = '';
+
         backgroundSave();
+        if(window.notifyOtherTabs) window.notifyOtherTabs();
         renderAdminSlidesSequence();
     }
 
     function removeCustomImage(slideIndex, imgIndex) {
         state.slidesSequence[slideIndex].images.splice(imgIndex, 1);
         backgroundSave();
+        if(window.notifyOtherTabs) window.notifyOtherTabs();
         renderAdminSlidesSequence();
     }
 
@@ -1319,6 +1447,7 @@
         images.splice(toIdx, 0, imageToMove);
 
         backgroundSave();
+        if(window.notifyOtherTabs) window.notifyOtherTabs();
         renderAdminSlidesSequence();
     }
 
@@ -1334,6 +1463,7 @@
         state.slidesSequence[toSlideIdx].images.push(imageToMove);
 
         backgroundSave();
+        if(window.notifyOtherTabs) window.notifyOtherTabs();
         renderAdminSlidesSequence();
     }
 
@@ -1347,6 +1477,7 @@
             images: []
         });
         backgroundSave();
+        if(window.notifyOtherTabs) window.notifyOtherTabs();
         renderAdminSlidesSequence();
     }
 
@@ -1356,6 +1487,7 @@
             type: type
         });
         backgroundSave();
+        if(window.notifyOtherTabs) window.notifyOtherTabs();
         renderAdminSlidesSequence();
     }
 
@@ -1366,6 +1498,7 @@
         }
         state.slidesSequence.splice(index, 1);
         backgroundSave();
+        if(window.notifyOtherTabs) window.notifyOtherTabs();
         renderAdminSlidesSequence();
     }
 
