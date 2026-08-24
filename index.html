@@ -1610,6 +1610,49 @@ function getHaftarahForParasha(parashaTitle) {
     return 'עדכן הפטרה';
 }
     window.onload = initApp;
+    <script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+  import { getFirestore, collection, onSnapshot } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+  // 1. 📌 הדבק כאן את פרטי החיבור האמיתיים שלך מתוך ה-Firebase Console
+  const firebaseConfig = {
+    apiKey: "YOUR_API_KEY",
+    authDomain: "YOUR_AUTH_DOMAIN",
+    projectId: "YOUR_PROJECT_ID",
+    storageBucket: "YOUR_STORAGE_BUCKET",
+    messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
+    appId: "YOUR_APP_ID"
+  };
+
+  // אתחול Firebase
+  const app = initializeApp(firebaseConfig);
+  const db = getFirestore(app);
+
+  // 2. 📌 החלף את "YOUR_COLLECTION_NAME" בשם האוסף (Collection) שיש לך ב-Firebase
+  const q = collection(db, "updates"); 
+
+  onSnapshot(q, (snapshot) => {
+    let htmlContent = "";
+    
+    snapshot.forEach((doc) => {
+      const data = doc.data();
+      
+      // 3. 📌 התאם את השדות (data.title, data.text וכו') לשמות השדות האמיתיים שיש אצלך במסמכים
+      htmlContent += `
+        <div class="update-item">
+          <h2>${data.title || ''}</h2>
+          <p>${data.text || ''}</p>
+        </div>
+      `;
+    });
+
+    // 4. 📌 ודא שקיים אצלך בדף HTML אלמנט עם ה-id הזה (או תשנה אותו ל-id של האזור שאמור להציג את הלוח אצלך)
+   const container = document.getElementById("main-board");
+    if (container) {
+      container.innerHTML = htmlContent;
+    }
+  });
+
 </script>
 </body>
 </html>
