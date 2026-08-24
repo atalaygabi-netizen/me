@@ -1521,20 +1521,21 @@
         const db = getDatabase(app);
 
         const inputElement = document.getElementById("input-ticker-text");
-        const dataRef = ref(db, 'appState/tickerText');
-
-        let isUpdatingFromRemote = false;
-
-        onValue(dataRef, (snapshot) => {
-            const serverData = snapshot.val();
-            if (serverData !== null && serverData !== inputElement.value) {
-                isUpdatingFromRemote = true;
-                inputElement.value = serverData;
-                isUpdatingFromRemote = false;
-            }
-        });
-
+        
+        // רץ רק אם שדה הטיקר קיים בעמוד הנוכחי
         if (inputElement) {
+            const dataRef = ref(db, 'appState/tickerText');
+            let isUpdatingFromRemote = false;
+
+            onValue(dataRef, (snapshot) => {
+                const serverData = snapshot.val();
+                if (serverData !== null && serverData !== inputElement.value) {
+                    isUpdatingFromRemote = true;
+                    inputElement.value = serverData;
+                    isUpdatingFromRemote = false;
+                }
+            });
+
             inputElement.addEventListener('input', () => {
                 if (isUpdatingFromRemote) return;
                 set(dataRef, inputElement.value);
@@ -1543,6 +1544,3 @@
     </script>
 </body>
 </html>
-
-
-
