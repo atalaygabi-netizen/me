@@ -62,24 +62,6 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     };
 });
-
-document.addEventListener("DOMContentLoaded", () => {
-    initRealtimeSync();
-    
-    // תופס אוטומטית כל שמירה מקומית ומעביר לענן
-    const originalSetItem = localStorage.setItem;
-    localStorage.setItem = function(key, value) {
-        originalSetItem.apply(this, arguments);
-        if (key.includes('synagogue') || key.includes('board') || key.includes('state') || key.includes('setting')) {
-            saveToCloud();
-        }
-    };
-});
-}
-
-document.addEventListener("DOMContentLoaded", () => {
-    initRealtimeSync();
-});
 </script>
     <style>
         :root {
