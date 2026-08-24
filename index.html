@@ -28,8 +28,10 @@ const db = firebase.firestore();
 
 async function saveToCloud() {
     try {
-        await db.collection("synagogueBoard").doc("currentState").set(state);
-        console.log("הנתונים נשמרו בענן בהצלחה!");
+        if (typeof state !== 'undefined') {
+            await db.collection("synagogueBoard").doc("currentState").set(state);
+            console.log("הנתונים נשמרו בענן בהצלחה!");
+        }
     } catch (error) {
         console.error("שגיאה בשמירה לענן:", error);
     }
@@ -38,12 +40,29 @@ async function saveToCloud() {
 function initRealtimeSync() {
     db.collection("synagogueBoard").doc("currentState").onSnapshot((doc) => {
         if (doc.exists) {
-            state = doc.data();
-            if (typeof renderBoard === 'function') {
-                renderBoard();
+            const cloudState = doc.data();
+            if (JSON.stringify(cloudState) !== JSON.stringify(window.state)) {
+                window.state = cloudState;
+                if (typeof renderBoard === 'function') {
+                    renderBoard();
+                }
             }
         }
     });
+}
+
+document.addEventListener("DOMContentLoaded", () => {
+    initRealtimeSync();
+    
+    // תופס אוטומטית כל שמירה מקומית ומעביר לענן
+    const originalSetItem = localStorage.setItem;
+    localStorage.setItem = function(key, value) {
+        originalSetItem.apply(this, arguments);
+        if (key.includes('synagogue') || key.includes('board') || key.includes('state') || key.includes('setting')) {
+            saveToCloud();
+        }
+    };
+});
 }
 
 document.addEventListener("DOMContentLoaded", () => {
