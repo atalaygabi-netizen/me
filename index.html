@@ -1502,43 +1502,59 @@
         renderAdminSlidesSequence();
     }
 <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { getDatabase, ref, set, onValue } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+    import { getDatabase, ref, set, onValue } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
 
-        const firebaseConfig = {
-            apiKey: "AIzaSyBl3EtGS2CRAybDochH2jaoSYbKQXA_BD6I",
-            authDomain: "gabi-fc835.firebaseapp.com",
-            databaseURL: "https://gabi-fc835-default-rtdb.firebaseio.com",
-            projectId: "gabi-fc835",
-            storageBucket: "gabi-fc835.firebasestorage.app",
-            messagingSenderId: "677241774099",
-            appId: "1:677241774099:web:ef3e8d028d55b8c108dfe6",
-            measurementId: "G-MJ4CEPQJ31"
-        };
+    const firebaseConfig = {
+        apiKey: "AIzaSyBl3EtGS2CRAybDochH2jaoSYbKQXA_BD6I",
+        authDomain: "gabi-fc835.firebaseapp.com",
+        databaseURL: "https://gabi-fc835-default-rtdb.firebaseio.com",
+        projectId: "gabi-fc835",
+        storageBucket: "gabi-fc835.firebasestorage.app",
+        messagingSenderId: "677241774099",
+        appId: "1:677241774099:web:ef3e8d028d55b8c108dfe6",
+        measurementId: "G-MJ4CEPQJ31"
+    };
 
-        const app = initializeApp(firebaseConfig);
-        const db = getDatabase(app);
+   <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+    import { getDatabase, ref, set, onValue } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
 
-        const inputElement = document.getElementById("input-ticker-text"); 
-        const dataRef = ref(db, 'appState/tickerText'); 
+    const firebaseConfig = {
+        apiKey: "AIzaSyBl3EtGS2CRAybDochH2jaoSYbKQXA_BD6I",
+        authDomain: "gabi-fc835.firebaseapp.com",
+        databaseURL: "https://gabi-fc835-default-rtdb.firebaseio.com",
+        projectId: "gabi-fc835",
+        storageBucket: "gabi-fc835.firebasestorage.app",
+        messagingSenderId: "677241774099",
+        appId: "1:677241774099:web:ef3e8d028d55b8c108dfe6",
+        measurementId: "G-MJ4CEPQJ31"
+    };
 
-        let isUpdatingFromRemote = false;
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
 
-        onValue(dataRef, (snapshot) => {
-            const serverData = snapshot.val();
-            if (serverData !== null && serverData !== inputElement.value) {
-                isUpdatingFromRemote = true;
-                inputElement.value = serverData; 
-                isUpdatingFromRemote = false;
-            }
-        });
+    const inputElement = document.getElementById("input-ticker-text");
+    const dataRef = ref(db, 'appState/tickerText');
 
+    let isUpdatingFromRemote = false;
+
+    onValue(dataRef, (snapshot) => {
+        const serverData = snapshot.val();
+        if (serverData !== null && serverData !== inputElement.value) {
+            isUpdatingFromRemote = true;
+            inputElement.value = serverData;
+            isUpdatingFromRemote = false;
+        }
+    });
+
+    if (inputElement) {
         inputElement.addEventListener('input', () => {
-            if (isUpdatingFromRemote) return; 
+            if (isUpdatingFromRemote) return;
             set(dataRef, inputElement.value);
         });
-    </script>
-    window.onload = initApp;
+    }
 </script>
+
 </body>
 </html>
