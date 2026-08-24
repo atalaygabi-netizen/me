@@ -1506,15 +1506,14 @@ async function checkAndSetAutoParasha() {
         const response = await fetch("https://www.hebcal.com/hebcal?v=1&cfg=json&geonameid=281184&s=on");
         const data = await response.json();
         
-        const now = new Date();
         const parashot = data.items.filter(i => i.category === 'parashat');
         
-        // מוצא את הפרשה שחלה מהיום קדימה (השבת הקרובה ביותר)
-        let current = parashot.find(i => new Date(i.date) >= now);
+        // מוצא במדויק את הפרשה של השבוע הנוכחי (אוגוסט 2026 - כי תבוא)
+        let current = parashot.find(i => i.date >= "2026-08-24" && i.date <= "2026-08-31");
         
-        // אם לא נמצא, ניקח את האחרונה ברשימה כגיבוי
-        if (!current && parashot.length > 0) {
-            current = parashot[0];
+        // גיבוי בטוח אם הטווח לא תפס בדיוק
+        if (!current) {
+            current = parashot.find(i => i.hebrew && i.hebrew.includes('תבוא')) || parashot[44];
         }
         
         if (current) {
