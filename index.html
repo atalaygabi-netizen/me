@@ -1,5 +1,5 @@
-
-
+```
+html
 <!DOCTYPE html>
 <html lang="he" dir="rtl">
 <head>
@@ -1501,46 +1501,9 @@
         if(window.notifyOtherTabs) window.notifyOtherTabs();
         renderAdminSlidesSequence();
     }
-    </script>
-<script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { getDatabase, ref, set, onValue } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
 
-        const firebaseConfig = {
-            apiKey: "AIzaSyBl3EtGS2CRAybDochH2jaoSYbKQXA_BD6I",
-            authDomain: "gabi-fc835.firebaseapp.com",
-            databaseURL: "https://gabi-fc835-default-rtdb.firebaseio.com",
-            projectId: "gabi-fc835",
-            storageBucket: "gabi-fc835.firebasestorage.app",
-            messagingSenderId: "677241774099",
-            appId: "1:677241774099:web:ef3e8d028d55b8c108dfe6",
-            measurementId: "G-MJ4CEPQJ31"
-        };
-
-        const app = initializeApp(firebaseConfig);
-        const db = getDatabase(app);
-
-        const inputElement = document.getElementById("input-ticker-text");
-        
-        // רץ רק אם שדה הטיקר קיים בעמוד הנוכחי
-        if (inputElement) {
-            const dataRef = ref(db, 'appState/tickerText');
-            let isUpdatingFromRemote = false;
-
-            onValue(dataRef, (snapshot) => {
-                const serverData = snapshot.val();
-                if (serverData !== null && serverData !== inputElement.value) {
-                    isUpdatingFromRemote = true;
-                    inputElement.value = serverData;
-                    isUpdatingFromRemote = false;
-                }
-            });
-
-            inputElement.addEventListener('input', () => {
-                if (isUpdatingFromRemote) return;
-                set(dataRef, inputElement.value);
-            });
-        }
-    </script>
+    window.onload = initApp;
+</script>
 </body>
 </html>
+```
