@@ -6,23 +6,26 @@
     <title>לוח עדכונים לבית הכנסת</title>
     <!-- ספריית חישוב זמני שמש -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/suncalc/1.9.0/suncalc.min.js"></script>
-    <!-- ספריות Firebase -->
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
-    <script>
-        const firebaseConfig = {
-  apiKey: "AIzaSyCFs51QBCQNwOTzb_qPetr3nF3LQ8m86qE",
-  authDomain: "gabi-180b3.firebaseapp.com",
-  projectId: "gabi-180b3",
-  storageBucket: "gabi-180b3.firebasestorage.app",
-  messagingSenderId: "491135659570",
-  appId: "1:491135659570:web:02a43a9c9ed8f8cf16962b",
-measurementId: "G-CKHJXR5LYD"
-};
+   <!-- ספריות Firebase -->
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+<script>
+    // הגדרות הפרויקט שלך כולל כתובת ה-Database החסרה
+    const firebaseConfig = {
+        apiKey: "AIzaSyCf51QBCQNwOTzb_qPetr3nF3LQ8m86qE",
+        authDomain: "gabi-180b3.firebaseapp.com",
+        databaseURL: "https://gabi-180b3-default-rtdb.firebaseio.com",
+        projectId: "gabi-180b3",
+        storageBucket: "gabi-180b3.appspot.com",
+        messagingSenderId: "491135659570",
+        appId: "1:491135659570:web:02a43a9c9ed8f8cf16962b",
+        measurementId: "G-CKHJXR5LYD"
+    };
 
-// אתחול Firebase
-firebase.initializeApp(firebaseConfig);
-const firebaseDb = firebase.database();
+    // אתחול Firebase
+    firebase.initializeApp(firebaseConfig);
+    const firebaseDb = firebase.database();
+
     </script>
     <style>
         :root {
