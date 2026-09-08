@@ -705,7 +705,8 @@
     let lastSavedString = "";
 
     function detectDeviceMode() {
-        const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || window.innerWidth < 768;
+        // מוגדר כך שיתייחס רק לטלפונים ניידים אמיתיים וקטנים, כדי שלא יפעיל גלילה בטלוויזיה או במחשב
+        const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) && window.innerWidth < 600;
         if (isMobile) {
             document.body.classList.remove('is-tv');
             document.body.classList.add('is-mobile');
