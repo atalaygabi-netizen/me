@@ -10,7 +10,6 @@
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
 <script>
-    // הגדרות הפרויקט שלך כולל כתובת ה-Database החסרה
     const firebaseConfig = {
         apiKey: "AIzaSyCf51QBCQNwOTzb_qPetr3nF3LQ8m86qE",
         authDomain: "gabi-180b3.firebaseapp.com",
@@ -22,11 +21,9 @@
         measurementId: "G-CKHJXR5LYD"
     };
 
-    // אתחול Firebase
     firebase.initializeApp(firebaseConfig);
     const firebaseDb = firebase.database();
-
-    </script>
+</script>
     <style>
         :root {
             --primary-color: #1a365d;
@@ -38,7 +35,7 @@
             
             --weekday-row-padding: 10px;
             --weekday-font-size: 1.1rem;
-            --shabbat-font-size: 1.1rem;
+            --weekday-font-weight: 700;
 
             --ticker-bg: #1a365d;
             --ticker-color: #ffffff;
@@ -55,8 +52,8 @@
         body {
             background-color: var(--bg-color);
             color: var(--text-color);
-            overflow: hidden;
-            height: 100vh;
+            overflow-x: hidden;
+            min-height: 100vh;
             display: flex;
             flex-direction: column;
             user-select: none;
@@ -105,7 +102,6 @@
             flex-shrink: 0;
         }
 
-        /* פס התקדמות זמן למצגת */
         #slide-progress-bar-container {
             position: fixed;
             top: 40px;
@@ -126,12 +122,27 @@
         .presentation-container {
             position: relative;
             width: 100vw;
-            height: calc(100vh - 84px);
             margin-top: 44px;
+            margin-bottom: 40px;
+            cursor: pointer;
+        }
+
+        body.is-tv .presentation-container {
+            height: calc(100vh - 84px);
+            overflow: hidden;
             display: flex;
             align-items: center;
             justify-content: center;
-            cursor: pointer;
+        }
+
+        body.is-mobile .presentation-container {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            padding: 15px;
+            height: auto;
+            overflow-y: auto;
+            cursor: default;
         }
 
         .slide {
@@ -143,17 +154,22 @@
             flex-direction: column;
             justify-content: flex-start;
             align-items: center;
-            animation: fadeIn 0.5s ease-in-out;
             overflow-y: auto;
         }
 
-        .slide.active {
+        body.is-tv .slide.active {
             display: flex;
         }
 
-        @keyframes fadeIn {
-            from { opacity: 0; transform: scale(0.98); }
-            to { opacity: 1; transform: scale(1); }
+        body.is-mobile .slide {
+            position: relative;
+            display: flex !important;
+            height: auto !important;
+            margin-bottom: 20px;
+            background: #fff;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+            padding: 20px;
         }
 
         .card {
@@ -180,6 +196,7 @@
             padding: var(--weekday-row-padding) 0;
             border-bottom: 1px dashed #edf2f7;
             font-size: var(--weekday-font-size);
+            font-weight: var(--weekday-font-weight);
         }
 
         .time-row:last-child {
@@ -215,10 +232,11 @@
             font-size: var(--ticker-font-size);
             font-weight: 600;
             will-change: transform;
+            padding-left: 100%;
         }
 
         @keyframes tickerAnim {
-            0% { transform: translateX(100vw); }
+            0% { transform: translateX(0); }
             100% { transform: translateX(-100%); }
         }
 
@@ -271,6 +289,29 @@
             padding: 6px 10px;
             border-radius: 6px;
             border: 1px solid #cbd5e0;
+            cursor: grab;
+            transition: background 0.2s, box-shadow 0.2s;
+        }
+
+        .admin-item-row:active {
+            cursor: grabbing;
+        }
+
+        .admin-item-row.dragging {
+            opacity: 0.4;
+            background: #cbd5e0;
+        }
+
+        .drag-handle {
+            cursor: grab;
+            color: #718096;
+            font-weight: bold;
+            padding: 0 5px;
+            font-size: 1.2rem;
+            user-select: none;
+        }
+        .drag-handle:active {
+            cursor: grabbing;
         }
 
         .custom-slide-box {
@@ -279,17 +320,6 @@
             border-radius: 8px;
             margin-bottom: 15px;
             background: #f8fafc;
-            cursor: grab;
-            transition: background 0.2s;
-        }
-
-        .custom-slide-box:active {
-            cursor: grabbing;
-        }
-
-        .custom-slide-box.dragging {
-            opacity: 0.4;
-            background: #cbd5e0;
         }
 
         .img-thumb-row {
@@ -302,6 +332,15 @@
             border-radius: 6px;
             margin-bottom: 6px;
             gap: 10px;
+            cursor: grab;
+            transition: background 0.2s, box-shadow 0.2s;
+        }
+        .img-thumb-row:active {
+            cursor: grabbing;
+        }
+        .img-thumb-row.dragging {
+            opacity: 0.4;
+            background: #cbd5e0;
         }
 
         .thumb-preview {
@@ -318,9 +357,14 @@
             justify-content: center;
             align-items: center;
             width: 100%;
-            height: calc(100vh - 180px);
-            max-width: 1200px;
-            margin-top: 10px;
+            flex: 1;
+            margin-top: 5px;
+            overflow: hidden;
+            height: calc(100vh - 140px);
+        }
+
+        body.is-mobile .single-image-display {
+            height: 60vh;
         }
 
         .single-image-display img {
@@ -328,9 +372,6 @@
             max-height: 100%;
             object-fit: contain;
             border-radius: 8px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.15);
-            background: #fff;
-            padding: 5px;
         }
 
         .tab-buttons {
@@ -393,12 +434,11 @@
             resize: vertical;
             height: 450px;
             white-space: pre;
-            overflow-wrap: normal;
             overflow-x: auto;
         }
     </style>
 </head>
-<body>
+<body class="is-tv">
 
     <div id="top-control-bar">
         <div id="live-clock">00:00:00</div>
@@ -410,7 +450,6 @@
         </div>
     </div>
 
-    <!-- פס התקדמות זמן למצגת -->
     <div id="slide-progress-bar-container">
         <div id="slide-progress-bar"></div>
     </div>
@@ -423,7 +462,6 @@
         </div>
     </div>
 
-    <!-- מודל בקשת סיסמה -->
     <div class="modal" id="passwordModal" onclick="if(event.target === this) closeModal('passwordModal')">
         <div class="modal-content" style="width: 350px; text-align: center;">
             <h3 style="margin-bottom: 15px; color: var(--primary-color);">הכנס סיסמת מנהל 🔐</h3>
@@ -434,7 +472,6 @@
         </div>
     </div>
 
-    <!-- לוח בקרה -->
     <div class="modal" id="controlPanelModal" onclick="if(event.target === this) closeModal('controlPanelModal')">
         <div class="modal-content" onclick="event.stopPropagation()">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; border-bottom: 2px solid #e2e8f0; padding-bottom: 15px;">
@@ -442,13 +479,11 @@
                 <button class="btn-action" style="background: #2f855a; padding: 10px 20px; font-size: 1rem; margin-top:0;" onclick="closeAndSyncModal()">שמור וסגור 💾</button>
             </div>
             
-            <!-- לשוניות בלוח הבקרה -->
             <div class="tab-buttons">
                 <button class="tab-btn active" onclick="switchTab('settingsTab', this)">⚙️ הגדרות ותוכן</button>
                 <button class="tab-btn" onclick="switchTab('codeEditorTab', this)">📝 עורך קוד ישיר (HTML)</button>
             </div>
 
-            <!-- תוכן לשונית הגדרות -->
             <div id="settingsTab" class="tab-content active">
                 <div style="background: #edf2f7; padding: 15px; border-radius: 8px; margin-bottom: 20px;">
                     <h3 style="font-size: 1.1rem; margin-bottom: 10px; color: var(--primary-color);">הגדרות כותרת עליונה</h3>
@@ -489,7 +524,7 @@
                         </div>
                         <div class="form-group" style="flex: 1; min-width: 150px;">
                             <label>מהירות ריצה (שניות לסבב):</label>
-                            <input type="number" id="input-ticker-speed" min="3" max="50" oninput="updateStateField('tickerSpeed', parseInt(this.value) || 12)">
+                            <input type="number" id="input-ticker-speed" min="3" max="50" oninput="updateStateField('tickerSpeed', parseInt(this.value) || 15)">
                         </div>
                         <div class="form-group" style="flex: 1; min-width: 150px;">
                             <label>צבע רקע הסרט:</label>
@@ -536,22 +571,18 @@
                 </div>
 
                 <div class="form-group">
-                    <label style="margin:0;">זמני תפילות יום חול:</label>
+                    <label style="margin:0;">זמני תפילות יום חול (ניתן לגרור ולשנות סדר ↕️):</label>
                     <div style="background: #f8fafc; padding: 12px; border-radius: 6px; margin: 10px 0 15px 0; border: 1px solid #cbd5e0;">
-                        <h4 style="font-size: 0.95rem; color: var(--primary-color); margin-bottom: 10px;">התאמת גודל כתב, רווח והדגשה - ימי חול בלבד</h4>
-                        <div style="display:flex; gap:15px; flex-wrap: wrap; align-items: center;">
-                            <div class="form-group" style="flex:1; min-width: 180px; margin-bottom:0;">
-                                <label style="font-size:0.85rem;">גודל כתב: <span id="weekday-font-val" style="color:var(--secondary-color);">1.1</span>rem</label>
-                                <input type="range" id="range-weekday-font" min="0.8" max="2.2" step="0.1" value="1.1" oninput="updateWeekdayFont(this.value)" style="width:100%; cursor:pointer;">
-                            </div>
-                            <div class="form-group" style="flex:1; min-width: 180px; margin-bottom:0;">
-                                <label style="font-size:0.85rem;">רווח שורות: <span id="weekday-row-val" style="color:var(--secondary-color);">10</span> פיקסלים</label>
-                                <input type="range" id="range-weekday-row" min="4" max="30" step="1" value="10" oninput="updateWeekdayRow(this.value)" style="width:100%; cursor:pointer;">
-                            </div>
-                            <div class="form-group" style="flex:0; min-width: 140px; margin-bottom:0; display:flex; align-items:center; gap:8px; padding-top:15px;">
-                                <input type="checkbox" id="check-weekday-bold" style="width:auto; cursor:pointer;" onchange="updateStateField('weekdayBold', this.checked)">
-                                <label for="check-weekday-bold" style="margin-bottom:0; cursor:pointer; font-size:0.9rem;">הדגש שמות תפילה</label>
-                            </div>
+                        <h4 style="font-size: 0.95rem; color: var(--primary-color); margin-bottom: 10px;">עובי ההדגשה (כתב זמני התפילות)</h4>
+                        <div class="form-group" style="margin-bottom:0;">
+                            <label style="font-size:0.85rem;">עובי הדגשה (Font Weight):</label>
+                            <select id="select-weekday-weight" onchange="updateWeekdayWeight(this.value)" style="padding:8px;">
+                                <option value="400">רגיל (400)</option>
+                                <option value="600">מודגש בינוני (600)</option>
+                                <option value="700">מודגש רגיל (700)</option>
+                                <option value="800">מודגש מאוד (800)</option>
+                                <option value="900">כבד במיוחד (900)</option>
+                            </select>
                         </div>
                     </div>
 
@@ -572,13 +603,13 @@
                 </div>
 
                 <div class="form-group">
-                    <label>זמני יום שישי:</label>
+                    <label>זמני יום שישי (ניתן לגרור ולשנות סדר ↕️):</label>
                     <div id="admin-friday-times-container"></div>
                     <button class="btn-action" style="background:#2b6cb0;" onclick="addFridayTime()">+ הוסף זמן ליום שישי</button>
                 </div>
 
                 <div class="form-group">
-                    <label>זמני יום שבת וצאת השבת (כרטיסיות):</label>
+                    <label>זמני יום שבת וצאת השבת (ניתן לגרור ולשנות סדר ↕️):</label>
                     <div id="admin-saturday-times-container"></div>
                     <button class="btn-action" style="background:#2b6cb0;" onclick="addSaturdayTime()">+ הוסף כרטיסייה לשבת</button>
                 </div>
@@ -586,8 +617,6 @@
                 <hr style="margin: 20px 0;">
 
                 <h3>ניהול סדר המצגות, הפינות ומסכי התפילות</h3>
-                <p style="font-size: 0.9rem; color: #4a5568; margin-bottom: 12px;">גרור את התיבות למטה כדי לשנות את סדר התצוגה במצגת (Drag & Drop).</p>
-                
                 <div style="display: flex; gap: 10px; margin-bottom: 15px; flex-wrap: wrap;">
                     <button class="btn-action" style="background: #2b6cb0; margin:0;" onclick="addCustomSlide()">+ הוסף פינת תמונות חדשה</button>
                     <button class="btn-action" style="background: #2f855a; margin:0;" onclick="duplicateSlideType('weekday')">📋 שכפל מסך תפילות חול</button>
@@ -601,11 +630,7 @@
                 </div>
             </div>
 
-            <!-- תוכן לשונית עורך קוד -->
             <div id="codeEditorTab" class="tab-content">
-                <div style="background: #e2e8f0; padding: 10px 15px; border-radius: 6px; margin-bottom: 12px; font-size: 0.95rem;">
-                    כאן ניתן לצפות ולערוך את קוד ה-HTML המלא של העמוד. הקוד נשמר אוטומטית בזיכרון הדפדפן (LocalStorage).
-                </div>
                 <div class="code-editor-wrapper">
                     <div id="code-line-numbers">1</div>
                     <textarea id="input-html-code" oninput="updateLineNumbers(); updateRawCodeStorage(this.value);" onscroll="syncCodeScroll(this)"></textarea>
@@ -629,7 +654,7 @@
         slideInterval: 10,
         weekdayFontSize: 1.1,
         weekdayRowSpacing: 10,
-        weekdayBold: false,
+        weekdayFontWeight: 700,
         adminPassword: "1234",
         cachedThursdayStr: "",
         cachedMinchaTime: "",
@@ -640,7 +665,7 @@
         topBarColor: "#ffffff",
         tickerText: "ברוכים הבאים לבית הכנסת • נא להקפיד על כיבוי פלאפונים בזמן התפילה • שבת שלום ומבורך!",
         tickerSeparator: "★",
-        tickerSpeed: 12,
+        tickerSpeed: 15,
         tickerBgColor: "#1a365d",
         tickerColor: "#ffffff",
         tickerFontSize: "1.2rem",
@@ -679,7 +704,17 @@
     let slideStartTime = Date.now();
     let lastSavedString = "";
 
-    // פונקציות סנכרון מול Firebase
+    function detectDeviceMode() {
+        const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || window.innerWidth < 768;
+        if (isMobile) {
+            document.body.classList.remove('is-tv');
+            document.body.classList.add('is-mobile');
+        } else {
+            document.body.classList.remove('is-mobile');
+            document.body.classList.add('is-tv');
+        }
+    }
+
     function syncAllDataToCloud() {
         if (!firebaseDb) return;
         firebaseDb.ref('board_state').set({
@@ -700,9 +735,7 @@
                         lastSavedString = newStr;
                         try {
                             localStorage.setItem('SynagogueBoardState', newStr);
-                        } catch(e) {
-                            console.error("שגיאה בשמירת נתוני ענן לזיכרון המקומי", e);
-                        }
+                        } catch(e) {}
                     }
                 }
                 if (data.rawHtml) {
@@ -721,8 +754,7 @@
             localStorage.setItem('SynagogueBoardState', str);
             lastSavedString = str;
         } catch(e) {
-            console.error("שגיאה בשמירה לזיכרון הדפדפן (אולי נפח הנתונים חורג מהמותר)", e);
-            alert("שגיאה: נפח הנתונים (תמונות רבות מדי) חורג מהמגבלה של זיכרון הדפדפן. נסה להעלות פחות תמונות או תמונות קטנות יותר.");
+            alert("שגיאה: נפח הנתונים חורג מהמותר בזיכרון. נסה להעלות פחות תמונות.");
         }
     }
 
@@ -730,9 +762,7 @@
         try {
             let saved = localStorage.getItem('SynagogueBoardState');
             if (saved) {
-                if (isBackgroundSync && saved === lastSavedString) {
-                    return;
-                }
+                if (isBackgroundSync && saved === lastSavedString) return;
                 let parsed = JSON.parse(saved);
                 state = Object.assign({}, state, parsed);
                 lastSavedString = saved;
@@ -742,42 +772,37 @@
                         { uniqueId: 's_default', type: 'shabbat' }
                     ];
                 }
-                if (isBackgroundSync) {
-                    renderBoard();
-                }
+                if (isBackgroundSync) renderBoard();
             }
-        } catch(e) {
-            console.error("שגיאה בטעינת הזיכרון", e);
-        }
+        } catch(e) {}
     }
 
     function backgroundSave() {
         state.cachedThursdayStr = "";
         saveToLocalStorage();
-        syncAllDataToCloud(); // סנכרון אוטומטי לענן בכל שינוי
+        syncAllDataToCloud();
         applyStyles();
     }
 
     function initApp() {
+        detectDeviceMode();
+        window.addEventListener('resize', detectDeviceMode);
         loadFromLocalStorage(false);
         renderBoard();
         startSlideRotation();
         setupKeyboardNavigation();
         setupLiveSync();
         startLiveClock();
-        listenToCloudChanges(); // הפעלת האזנה לענן עם טעינת העמוד
+        listenToCloudChanges();
     }
 
     function startLiveClock() {
         const clockEl = document.getElementById('live-clock');
         if (!clockEl) return;
-        
         function updateClock() {
             const now = new Date();
-            const timeString = now.toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-            clockEl.innerText = timeString;
+            clockEl.innerText = now.toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
         }
-        
         updateClock();
         setInterval(updateClock, 1000);
     }
@@ -790,27 +815,18 @@
             }
         }, 1000);
 
-        setInterval(() => {
-            loadFromLocalStorage(true);
-        }, 60000);
-
         if (window.BroadcastChannel) {
             const bc = new BroadcastChannel('SynagogueBoard_Channel');
             bc.onmessage = (event) => {
-                if (event.data === 'update') {
-                    loadFromLocalStorage(true);
-                }
+                if (event.data === 'update') loadFromLocalStorage(true);
             };
-            window.notifyOtherTabs = () => {
-                bc.postMessage('update');
-            };
+            window.notifyOtherTabs = () => bc.postMessage('update');
         } else {
             window.notifyOtherTabs = () => {};
         }
     }
 
-    // דחיסה אגרסיבית מיוחדת למניעת חריגת נפח ב-LocalStorage/Firebase (רוחב מקסימלי 800 ואיכות 50%)
-    async function compressImage(file, maxWidth = 800, quality = 0.50) {
+    async function compressImage(file, maxWidth = 1200, quality = 0.6) {
         return new Promise((resolve) => {
             const reader = new FileReader();
             reader.onload = (e) => {
@@ -826,8 +842,6 @@
                     canvas.width = width;
                     canvas.height = height;
                     const ctx = canvas.getContext('2d');
-                    ctx.imageSmoothingEnabled = true;
-                    ctx.imageSmoothingQuality = 'medium';
                     ctx.drawImage(img, 0, 0, width, height);
                     resolve(canvas.toDataURL('image/jpeg', quality));
                 };
@@ -840,6 +854,7 @@
     function applyStyles() {
         document.documentElement.style.setProperty('--weekday-row-padding', (state.weekdayRowSpacing || 10) + 'px');
         document.documentElement.style.setProperty('--weekday-font-size', (state.weekdayFontSize || 1.1) + 'rem');
+        document.documentElement.style.setProperty('--weekday-font-weight', (state.weekdayFontWeight || 700));
 
         document.documentElement.style.setProperty('--ticker-bg', state.tickerBgColor || '#1a365d');
         document.documentElement.style.setProperty('--ticker-color', state.tickerColor || '#ffffff');
@@ -851,24 +866,15 @@
             topText.innerText = state.topBarTitle || "לוח עדכונים לבית הכנסת";
             topText.style.fontSize = state.topBarFontSize || "1.1rem";
             topText.style.color = state.topBarColor || "#ffffff";
-            
-            if (state.topBarAlign === 'center') {
-                topArea.style.justifyContent = 'center';
-            } else if (state.topBarAlign === 'left') {
-                topArea.style.justifyContent = 'flex-start';
-            } else {
-                topArea.style.justifyContent = 'flex-end';
-            }
+            topArea.style.justifyContent = state.topBarAlign || 'center';
         }
 
         const tickerTrack = document.getElementById('tickerTrackElement');
         if (tickerTrack) {
             let msg = state.tickerText || "";
             let sep = ` ${state.tickerSeparator || "★"} `;
-            let fullText = msg + sep;
-            let repeated = fullText.repeat(4);
-            tickerTrack.innerText = repeated;
-            tickerTrack.style.animationDuration = (state.tickerSpeed || 12) + 's';
+            tickerTrack.innerText = (msg + sep).repeat(6);
+            tickerTrack.style.animationDuration = (state.tickerSpeed || 15) + 's';
         }
     }
 
@@ -877,21 +883,10 @@
         backgroundSave();
         renderBoard();
         if(window.notifyOtherTabs) window.notifyOtherTabs();
-        if(['lat', 'lng', 'minchaOffset', 'autoMincha', 'autoArvit'].includes(field)) {
-            updateMinchaStatusText();
-        }
     }
 
-    function updateWeekdayFont(val) {
-        let num = parseFloat(val);
-        document.getElementById('weekday-font-val').innerText = num;
-        updateStateField('weekdayFontSize', num);
-    }
-
-    function updateWeekdayRow(val) {
-        let num = parseInt(val);
-        document.getElementById('weekday-row-val').innerText = num;
-        updateStateField('weekdayRowSpacing', num);
+    function updateWeekdayWeight(val) {
+        updateStateField('weekdayFontWeight', val);
     }
 
     function updateShabbatField(field, value) {
@@ -904,80 +899,45 @@
     function getThursdayDate(date = new Date()) {
         const day = date.getDay();
         const d = new Date(date);
-        let addDays = 0;
-        if (day <= 4) {
-            addDays = 4 - day;
-        } else if (day === 5) {
-            addDays = 6;
-        } else if (day === 6) {
-            addDays = 5;
-        }
+        let addDays = day <= 4 ? 4 - day : (day === 5 ? 6 : 5);
         d.setDate(d.getDate() + addDays);
         return d;
     }
 
     function getWeeklyMinchaTime() {
-        if (!state.autoMincha) return state.weekdayTimes.find(t => t.name.includes('מנחה'))?.time || '19:00';
-
+        if (!state.autoMincha) return '19:00';
         const thursday = getThursdayDate();
         const thursdayStr = thursday.toISOString().split('T')[0];
-
-        if (state.cachedThursdayStr === thursdayStr && state.cachedMinchaTime) {
-            return state.cachedMinchaTime;
-        }
-
+        if (state.cachedThursdayStr === thursdayStr && state.cachedMinchaTime) return state.cachedMinchaTime;
         try {
             if (typeof SunCalc !== 'undefined') {
                 const times = SunCalc.getTimes(thursday, state.lat, state.lng);
-                const sunset = times.sunset;
-                const target = new Date(sunset.getTime() - (state.minchaOffset * 60000));
+                const target = new Date(times.sunset.getTime() - (state.minchaOffset * 60000));
                 const timeStr = target.toLocaleTimeString('he-IL', {hour: '2-digit', minute:'2-digit'});
-                
                 state.cachedThursdayStr = thursdayStr;
                 state.cachedMinchaTime = timeStr;
                 return timeStr;
             }
-            return "19:00";
-        } catch(e) {
-            return state.cachedMinchaTime || "19:00";
-        }
+        } catch(e) {}
+        return "19:00";
     }
 
-    function getCalculatedArvitTime(minchaTimeString) {
-        if (!state.autoArvit) return state.weekdayTimes.find(t => t.name.includes('ערבית'))?.time || '20:00';
-        if (!minchaTimeString || minchaTimeString.includes(':') === false) return '20:00';
-
+    function getCalculatedArvitTime(minchaStr) {
+        if (!state.autoArvit) return '20:00';
         try {
-            let parts = minchaTimeString.split(':');
-            let hours = parseInt(parts[0], 10);
-            let minutes = parseInt(parts[1], 10);
-
+            let parts = minchaStr.split(':');
             let d = new Date();
-            d.setHours(hours, minutes + 40, 0, 0);
-
+            d.setHours(parseInt(parts[0], 10), parseInt(parts[1], 10) + 40, 0, 0);
             return d.toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit' });
-        } catch(e) {
-            return '20:00';
-        }
+        } catch(e) { return '20:00'; }
     }
 
     function updateMinchaStatusText() {
         const infoEl = document.getElementById('mincha-status-info');
         if (!infoEl) return;
-        let textArr = [];
-        if (state.autoMincha) {
-            const thursday = getThursdayDate();
-            const dateFormatted = thursday.toLocaleDateString('he-IL');
-            const mTime = getWeeklyMinchaTime();
-            textArr.push(`שעת מנחה לשבוע זה (לפי שקיעת יום חמישי ${dateFormatted}): ${mTime}`);
-            if (state.autoArvit) {
-                const aTime = getCalculatedArvitTime(mTime);
-                textArr.push(`שעת ערבית אוטומטית (40 דק' אחרי מנחה): ${aTime}`);
-            }
-        } else {
-            textArr.push("חישוב מנחה אוטומטי מבוטל.");
-        }
-        infoEl.innerHTML = textArr.join('<br>');
+        let mTime = getWeeklyMinchaTime();
+        let aTime = getCalculatedArvitTime(mTime);
+        infoEl.innerHTML = `שעת מנחה מחושבת: ${mTime} | שעת ערבית: ${aTime}`;
     }
 
     function renderBoard() {
@@ -988,7 +948,6 @@
 
         let minchaCalculated = state.autoMincha ? getWeeklyMinchaTime() : '';
         let arvitCalculated = state.autoArvit ? getCalculatedArvitTime(minchaCalculated) : '';
-        let boldStyle = state.weekdayBold ? 'font-weight: bold;' : 'font-weight: normal;';
 
         let expandedSlides = [];
         sequence.forEach(item => {
@@ -999,19 +958,15 @@
                         title: item.title || 'פינה מותאמת אישית',
                         fontSize: item.fontSize || '2.3rem',
                         fontColor: item.fontColor || '#1a365d',
-                        fontFamily: item.fontFamily || 'sans-serif',
-                        imageUrl: imgUrl,
-                        imageIndex: imgIdx,
-                        totalImages: item.images.length
+                        imageUrl: imgUrl
                     });
                 });
-            } else if (item.type === 'custom' && (!item.images || item.images.length === 0)) {
+            } else if (item.type === 'custom') {
                 expandedSlides.push({
                     type: 'custom_empty',
                     title: item.title || 'פינה מותאמת אישית',
                     fontSize: item.fontSize || '2.3rem',
-                    fontColor: item.fontColor || '#1a365d',
-                    fontFamily: item.fontFamily || 'sans-serif'
+                    fontColor: item.fontColor || '#1a365d'
                 });
             } else {
                 expandedSlides.push(item);
@@ -1019,7 +974,6 @@
         });
 
         if (currentSlide >= expandedSlides.length) currentSlide = 0;
-
         let html = '';
 
         expandedSlides.forEach((item, index) => {
@@ -1034,74 +988,58 @@
                             <h3 style="font-size: 1.6rem; margin-bottom: 15px;">סדר התפילות</h3>
                             ${state.weekdayTimes.map(t => {
                                 let displayTime = t.time;
-                                if (t.name.includes('מנחה') && state.autoMincha) {
-                                    displayTime = minchaCalculated;
-                                } else if (t.name.includes('ערבית') && state.autoArvit) {
-                                    displayTime = arvitCalculated;
-                                }
-                                return `<div class="time-row"><span style="${boldStyle}">${t.name}</span><strong>${displayTime}</strong></div>`;
+                                if (t.name.includes('מנחה') && state.autoMincha) displayTime = minchaCalculated;
+                                else if (t.name.includes('ערבית') && state.autoArvit) displayTime = arvitCalculated;
+                                return `<div class="time-row"><span style="font-weight: ${state.weekdayFontWeight || 700};">${t.name}</span><strong style="font-weight: ${state.weekdayFontWeight || 700};">${displayTime}</strong></div>`;
                             }).join('')}
                         </div>
                     </div>
                 </div>`;
             } else if (item.type === 'shabbat') {
-                let fridayCount = (state.shabbat.friday || []).length;
-                let saturdayCount = (state.shabbat.saturday || []).length;
-                let totalCards = fridayCount + saturdayCount;
-
-                let cardPadding = totalCards > 10 ? '8px 12px' : (totalCards > 6 ? '10px 14px' : '14px 20px');
-                let titleSize = totalCards > 10 ? '0.9rem' : (totalCards > 6 ? '1rem' : '1.15rem');
-                let timeSize = totalCards > 10 ? '1rem' : (totalCards > 6 ? '1.15rem' : '1.35rem');
-                let gridGap = totalCards > 10 ? '8px' : '12px';
-
                 html += `
                 <div class="slide ${isActive}" id="slide-${index}">
                     <h1 style="font-size: 1.9rem; color: #1a365d; text-align: center; margin-bottom: 10px;">זמני שבת קודש</h1>
                     <div style="width: 100%; max-width: 1400px; display: flex; flex-direction: column; gap: 10px;">
-                        
                         <div class="card" style="text-align: center; padding: 10px; border: 2px solid var(--accent-color);">
-                            <h3 style="color: var(--primary-color); font-size: 1.2rem; margin-bottom: 2px; border: none; padding: 0;">${state.shabbat.parasha}</h3>
-                            <div style="font-size: 0.9rem; color: #4a5568;">${state.shabbat.haftara}</div>
+                            <h3 style="color: var(--primary-color); font-size: 1.2rem; margin-bottom: 2px; border: none; padding: 0; font-weight: bold;">${state.shabbat.parasha}</h3>
+                            <div style="font-size: 0.9rem; color: #4a5568; font-weight: bold;">${state.shabbat.haftara}</div>
                         </div>
-
                         <div>
                             <h4 style="color: var(--secondary-color); font-size: 1rem; margin-bottom: 6px;">יום שישי 🕯️</h4>
-                            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: ${gridGap};">
+                            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 10px;">
                                 ${state.shabbat.friday.map(f => `
-                                    <div class="card" style="display: flex; flex-direction: column; justify-content: center; align-items: center; padding: ${cardPadding}; text-align: center; gap: 4px;">
-                                        <span style="font-size: ${titleSize}; color: #4a5568; font-weight: 600;">${f.event}</span>
-                                        <strong style="font-size: ${timeSize}; color: var(--primary-color);">${f.time}</strong>
+                                    <div class="card" style="display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 12px; text-align: center; gap: 4px;">
+                                        <span style="font-size: 1.1rem; color: #2d3748; font-weight: ${state.weekdayFontWeight || 700};">${f.event}</span>
+                                        <strong style="font-size: 1.3rem; color: var(--primary-color); font-weight: ${state.weekdayFontWeight || 700};">${f.time}</strong>
                                     </div>
                                 `).join('')}
                             </div>
                         </div>
-
                         <div>
                             <h4 style="color: var(--secondary-color); font-size: 1rem; margin-bottom: 6px;">יום שבת 🍷</h4>
-                            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: ${gridGap};">
+                            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 10px;">
                                 ${state.shabbat.saturday.map(s => `
-                                    <div class="card" style="display: flex; flex-direction: column; justify-content: center; align-items: center; padding: ${cardPadding}; text-align: center; gap: 4px;">
-                                        <span style="font-size: ${titleSize}; color: #4a5568; font-weight: 600;">${s.event}</span>
-                                        <strong style="font-size: ${timeSize}; color: var(--primary-color);">${s.time}</strong>
+                                    <div class="card" style="display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 12px; text-align: center; gap: 4px;">
+                                        <span style="font-size: 1.1rem; color: #2d3748; font-weight: ${state.weekdayFontWeight || 700};">${s.event}</span>
+                                        <strong style="font-size: 1.3rem; color: var(--primary-color); font-weight: ${state.weekdayFontWeight || 700};">${s.time}</strong>
                                     </div>
                                 `).join('')}
                             </div>
                         </div>
-
                     </div>
                 </div>`;
             } else if (item.type === 'custom_single') {
                 html += `
                 <div class="slide ${isActive}" id="slide-${index}">
-                    <h1 style="font-size: ${item.fontSize}; color: ${item.fontColor}; font-family: ${item.fontFamily}; text-align: center; margin-bottom: 5px;">${item.title}</h1>
+                    <h1 style="font-size: ${item.fontSize}; color: ${item.fontColor}; text-align: center; margin-bottom: 5px;">${item.title}</h1>
                     <div class="single-image-display">
-                        <img src="${item.imageUrl}" alt="תמונה מתוך הפינה">
+                        <img src="${item.imageUrl}" alt="תמונה">
                     </div>
                 </div>`;
             } else if (item.type === 'custom_empty') {
                 html += `
                 <div class="slide ${isActive}" id="slide-${index}">
-                    <h1 style="font-size: ${item.fontSize}; color: ${item.fontColor}; font-family: ${item.fontFamily}; text-align: center; margin-bottom: 10px;">${item.title}</h1>
+                    <h1 style="font-size: ${item.fontSize}; color: ${item.fontColor}; text-align: center; margin-bottom: 10px;">${item.title}</h1>
                     <div style="color: #a0aec0; margin-top: 40px; font-size: 1.2rem;">אין תמונות להצגה בפינה זו</div>
                 </div>`;
             }
@@ -1114,6 +1052,7 @@
     function startSlideRotation() {
         if (slideTimer) clearInterval(slideTimer);
         if (progressInterval) clearInterval(progressInterval);
+        if (document.body.classList.contains('is-mobile')) return;
 
         const intervalSec = (state.slideInterval || 10);
         const intervalMs = intervalSec * 1000;
@@ -1143,29 +1082,18 @@
     function updateActiveSlideDOM() {
         const count = window.currentExpandedSlidesCount || 1;
         if (currentSlide >= count) currentSlide = 0;
-        const slides = document.querySelectorAll('.presentation-container .slide');
-        slides.forEach((slide, idx) => {
-            if (idx === currentSlide) {
-                slide.classList.add('active');
-            } else {
-                slide.classList.remove('active');
-            }
+        document.querySelectorAll('.presentation-container .slide').forEach((slide, idx) => {
+            if (idx === currentSlide) slide.classList.add('active');
+            else slide.classList.remove('active');
         });
         slideStartTime = Date.now();
     }
 
     function handleScreenClick(event) {
+        if (document.body.classList.contains('is-mobile')) return;
         const count = window.currentExpandedSlidesCount || 1;
         if (count <= 1) return;
-
-        const width = window.innerWidth;
-        const x = event.clientX;
-
-        if (x < width * 0.3) {
-            currentSlide = (currentSlide - 1 + count) % count;
-        } else {
-            currentSlide = (currentSlide + 1) % count;
-        }
+        currentSlide = event.clientX < window.innerWidth * 0.3 ? (currentSlide - 1 + count) % count : (currentSlide + 1) % count;
         updateActiveSlideDOM();
         resetSlideTimer();
     }
@@ -1173,11 +1101,8 @@
     function setupKeyboardNavigation() {
         document.addEventListener('keydown', (e) => {
             if (['INPUT', 'TEXTAREA', 'SELECT'].includes(document.activeElement.tagName)) return;
-            if (document.getElementById('controlPanelModal').style.display === 'flex' || document.getElementById('passwordModal').style.display === 'flex') return;
-
             const count = window.currentExpandedSlidesCount || 1;
-            if (count <= 1) return;
-
+            if (count <= 1 || document.body.classList.contains('is-mobile')) return;
             if (e.key === 'ArrowRight' || e.key === 'ArrowDown') {
                 currentSlide = (currentSlide + 1) % count;
                 updateActiveSlideDOM();
@@ -1197,13 +1122,11 @@
     }
 
     function verifyPassword() {
-        const pwd = document.getElementById('admin-password-input').value;
-        if (pwd === (state.adminPassword || "1234")) {
+        if (document.getElementById('admin-password-input').value === (state.adminPassword || "1234")) {
             closeModal('passwordModal');
             openControlPanel();
         } else {
             alert("סיסמה שגויה!");
-            document.getElementById('admin-password-input').value = '';
         }
     }
 
@@ -1221,7 +1144,6 @@
         }
     }
 
-    // פונקציה לסגירת המודל וביצוע סנכרון מיידי לענן
     function closeAndSyncModal() {
         syncAllDataToCloud();
         closeModal('controlPanelModal');
@@ -1232,39 +1154,29 @@
         document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
         document.getElementById(tabId).classList.add('active');
         btnEl.classList.add('active');
-
-        if (tabId === 'codeEditorTab') {
-            loadCurrentHtmlIntoEditor();
-        }
+        if (tabId === 'codeEditorTab') loadCurrentHtmlIntoEditor();
     }
 
     function loadCurrentHtmlIntoEditor() {
-        const textarea = document.getElementById('input-html-code');
-        textarea.value = localStorage.getItem('CustomRawHtmlCode') || document.documentElement.outerHTML;
+        document.getElementById('input-html-code').value = localStorage.getItem('CustomRawHtmlCode') || document.documentElement.outerHTML;
         updateLineNumbers();
     }
 
     function updateRawCodeStorage(val) {
-        try {
-            localStorage.setItem('CustomRawHtmlCode', val);
-        } catch(e) {}
+        try { localStorage.setItem('CustomRawHtmlCode', val); } catch(e) {}
         syncAllDataToCloud();
     }
 
     function updateLineNumbers() {
         const textarea = document.getElementById('input-html-code');
-        const lineNums = document.getElementById('code-line-numbers');
-        const lines = textarea.value.split('\n').length;
+        let lines = textarea.value.split('\n').length;
         let str = '';
-        for (let i = 1; i <= lines; i++) {
-            str += i + '\n';
-        }
-        lineNums.innerText = str;
+        for (let i = 1; i <= lines; i++) str += i + '\n';
+        document.getElementById('code-line-numbers').innerText = str;
     }
 
     function syncCodeScroll(textarea) {
-        const lineNums = document.getElementById('code-line-numbers');
-        lineNums.scrollTop = textarea.scrollTop;
+        document.getElementById('code-line-numbers').scrollTop = textarea.scrollTop;
     }
 
     function populateControlPanel() {
@@ -1275,7 +1187,7 @@
         
         document.getElementById('input-ticker-text').value = state.tickerText || '';
         document.getElementById('input-ticker-sep').value = state.tickerSeparator || '★';
-        document.getElementById('input-ticker-speed').value = state.tickerSpeed || 12;
+        document.getElementById('input-ticker-speed').value = state.tickerSpeed || 15;
         document.getElementById('input-ticker-bg').value = state.tickerBgColor || '#1a365d';
         document.getElementById('input-ticker-color').value = state.tickerColor || '#ffffff';
 
@@ -1286,15 +1198,10 @@
         document.getElementById('input-mincha-offset').value = state.minchaOffset || 25;
         document.getElementById('check-auto-arvit').checked = !!state.autoArvit;
         
-        document.getElementById('range-weekday-font').value = state.weekdayFontSize || 1.1;
-        document.getElementById('weekday-font-val').innerText = state.weekdayFontSize || 1.1;
-        document.getElementById('range-weekday-row').value = state.weekdayRowSpacing || 10;
-        document.getElementById('weekday-row-val').innerText = state.weekdayRowSpacing || 10;
-        document.getElementById('check-weekday-bold').checked = !!state.weekdayBold;
+        document.getElementById('select-weekday-weight').value = state.weekdayFontWeight || 700;
 
         document.getElementById('input-shabbat-parasha').value = state.shabbat.parasha || '';
         document.getElementById('input-shabbat-haftara').value = state.shabbat.haftara || '';
-
         document.getElementById('input-slide-interval').value = state.slideInterval || 10;
 
         updateMinchaStatusText();
@@ -1304,269 +1211,180 @@
         renderAdminSlidesSequence();
     }
 
+    // גרירה ושחרור - ימי חול
+    let draggedWeekdayIndex = null;
     function renderAdminWeekdayTimes() {
         const container = document.getElementById('admin-weekday-times-container');
         container.innerHTML = state.weekdayTimes.map((t, i) => `
-            <div class="admin-item-row">
-                <input type="text" value="${t.name}" onchange="state.weekdayTimes[${i}].name = this.value; backgroundSave(); if(window.notifyOtherTabs) window.notifyOtherTabs();" placeholder="שם תפילה">
-                <input type="text" value="${t.time}" onchange="state.weekdayTimes[${i}].time = this.value; backgroundSave(); if(window.notifyOtherTabs) window.notifyOtherTabs();" style="width: 120px;" placeholder="שעה">
+            <div class="admin-item-row" draggable="true" ondragstart="handleWeekdayDragStart(event, ${i})" ondragover="handleWeekdayDragOver(event)" ondrop="handleWeekdayDrop(event, ${i})" ondragend="handleWeekdayDragEnd(event)">
+                <span class="drag-handle" title="גרור לשינוי סדר">☰</span>
+                <input type="text" value="${t.name}" onchange="state.weekdayTimes[${i}].name = this.value; backgroundSave();" placeholder="שם תפילה">
+                <input type="text" value="${t.time}" onchange="state.weekdayTimes[${i}].time = this.value; backgroundSave();" style="width: 120px;" placeholder="שעה">
                 <button class="btn-action" style="background:#e53e3e; margin:0;" onclick="removeWeekdayTime(${i})">🗑️</button>
             </div>
         `).join('');
     }
-
-    function addWeekdayTime() {
-        state.weekdayTimes.push({ name: "תפילה חדשה", time: "00:00" });
+    function handleWeekdayDragStart(e, index) { draggedWeekdayIndex = index; e.currentTarget.classList.add('dragging'); }
+    function handleWeekdayDragOver(e) { e.preventDefault(); }
+    function handleWeekdayDrop(e, targetIndex) {
+        e.preventDefault();
+        if (draggedWeekdayIndex === null || draggedWeekdayIndex === targetIndex) return;
+        const movedItem = state.weekdayTimes.splice(draggedWeekdayIndex, 1)[0];
+        state.weekdayTimes.splice(targetIndex, 0, movedItem);
+        draggedWeekdayIndex = null;
         backgroundSave();
-        if(window.notifyOtherTabs) window.notifyOtherTabs();
         renderAdminWeekdayTimes();
     }
-
-    function removeWeekdayTime(i) {
-        state.weekdayTimes.splice(i, 1);
-        backgroundSave();
-        if(window.notifyOtherTabs) window.notifyOtherTabs();
-        renderAdminWeekdayTimes();
+    function handleWeekdayDragEnd(e) {
+        draggedWeekdayIndex = null;
+        document.querySelectorAll('#admin-weekday-times-container .admin-item-row').forEach(el => el.classList.remove('dragging'));
     }
+    function addWeekdayTime() { state.weekdayTimes.push({ name: "תפילה חדשה", time: "00:00" }); backgroundSave(); renderAdminWeekdayTimes(); }
+    function removeWeekdayTime(i) { state.weekdayTimes.splice(i, 1); backgroundSave(); renderAdminWeekdayTimes(); }
 
+    // גרירה ושחרור - יום שישי
+    let draggedFridayIndex = null;
     function renderAdminFridayTimes() {
-        const container = document.getElementById('admin-friday-times-container');
-        container.innerHTML = state.shabbat.friday.map((f, i) => `
-            <div class="admin-item-row">
-                <input type="text" value="${f.event}" onchange="state.shabbat.friday[${i}].event = this.value; backgroundSave(); if(window.notifyOtherTabs) window.notifyOtherTabs();" placeholder="אירוע">
-                <input type="text" value="${f.time}" onchange="state.shabbat.friday[${i}].time = this.value; backgroundSave(); if(window.notifyOtherTabs) window.notifyOtherTabs();" style="width: 120px;" placeholder="שעה">
+        document.getElementById('admin-friday-times-container').innerHTML = state.shabbat.friday.map((f, i) => `
+            <div class="admin-item-row" draggable="true" ondragstart="handleFridayDragStart(event, ${i})" ondragover="handleFridayDragOver(event)" ondrop="handleFridayDrop(event, ${i})" ondragend="handleFridayDragEnd(event)">
+                <span class="drag-handle" title="גרור לשינוי סדר">☰</span>
+                <input type="text" value="${f.event}" onchange="state.shabbat.friday[${i}].event = this.value; backgroundSave();" placeholder="אירוע">
+                <input type="text" value="${f.time}" onchange="state.shabbat.friday[${i}].time = this.value; backgroundSave();" style="width: 120px;" placeholder="שעה">
                 <button class="btn-action" style="background:#e53e3e; margin:0;" onclick="removeFridayTime(${i})">🗑️</button>
             </div>
         `).join('');
     }
-
-    function addFridayTime() {
-        state.shabbat.friday.push({ event: "אירוע חדש", time: "00:00" });
+    function handleFridayDragStart(e, index) { draggedFridayIndex = index; e.currentTarget.classList.add('dragging'); }
+    function handleFridayDragOver(e) { e.preventDefault(); }
+    function handleFridayDrop(e, targetIndex) {
+        e.preventDefault();
+        if (draggedFridayIndex === null || draggedFridayIndex === targetIndex) return;
+        const movedItem = state.shabbat.friday.splice(draggedFridayIndex, 1)[0];
+        state.shabbat.friday.splice(targetIndex, 0, movedItem);
+        draggedFridayIndex = null;
         backgroundSave();
-        if(window.notifyOtherTabs) window.notifyOtherTabs();
         renderAdminFridayTimes();
     }
-
-    function removeFridayTime(i) {
-        state.shabbat.friday.splice(i, 1);
-        backgroundSave();
-        if(window.notifyOtherTabs) window.notifyOtherTabs();
-        renderAdminFridayTimes();
+    function handleFridayDragEnd(e) {
+        draggedFridayIndex = null;
+        document.querySelectorAll('#admin-friday-times-container .admin-item-row').forEach(el => el.classList.remove('dragging'));
     }
+    function addFridayTime() { state.shabbat.friday.push({ event: "אירוע חדש", time: "00:00" }); backgroundSave(); renderAdminFridayTimes(); }
+    function removeFridayTime(i) { state.shabbat.friday.splice(i, 1); backgroundSave(); renderAdminFridayTimes(); }
 
+    // גרירה ושחרור - יום שבת
+    let draggedSaturdayIndex = null;
     function renderAdminSaturdayTimes() {
-        const container = document.getElementById('admin-saturday-times-container');
-        container.innerHTML = state.shabbat.saturday.map((s, i) => `
-            <div class="admin-item-row">
-                <input type="text" value="${s.event}" onchange="state.shabbat.saturday[${i}].event = this.value; backgroundSave(); if(window.notifyOtherTabs) window.notifyOtherTabs();" placeholder="אירוע / שיעור">
-                <input type="text" value="${s.time}" onchange="state.shabbat.saturday[${i}].time = this.value; backgroundSave(); if(window.notifyOtherTabs) window.notifyOtherTabs();" style="width: 120px;" placeholder="שעה">
+        document.getElementById('admin-saturday-times-container').innerHTML = state.shabbat.saturday.map((s, i) => `
+            <div class="admin-item-row" draggable="true" ondragstart="handleSaturdayDragStart(event, ${i})" ondragover="handleSaturdayDragOver(event)" ondrop="handleSaturdayDrop(event, ${i})" ondragend="handleSaturdayDragEnd(event)">
+                <span class="drag-handle" title="גרור לשינוי סדר">☰</span>
+                <input type="text" value="${s.event}" onchange="state.shabbat.saturday[${i}].event = this.value; backgroundSave();" placeholder="אירוע">
+                <input type="text" value="${s.time}" onchange="state.shabbat.saturday[${i}].time = this.value; backgroundSave();" style="width: 120px;" placeholder="שעה">
                 <button class="btn-action" style="background:#e53e3e; margin:0;" onclick="removeSaturdayTime(${i})">🗑️</button>
             </div>
         `).join('');
     }
-
-    function addSaturdayTime() {
-        state.shabbat.saturday.push({ event: "שיעור חדש", time: "00:00" });
+    function handleSaturdayDragStart(e, index) { draggedSaturdayIndex = index; e.currentTarget.classList.add('dragging'); }
+    function handleSaturdayDragOver(e) { e.preventDefault(); }
+    function handleSaturdayDrop(e, targetIndex) {
+        e.preventDefault();
+        if (draggedSaturdayIndex === null || draggedSaturdayIndex === targetIndex) return;
+        const movedItem = state.shabbat.saturday.splice(draggedSaturdayIndex, 1)[0];
+        state.shabbat.saturday.splice(targetIndex, 0, movedItem);
+        draggedSaturdayIndex = null;
         backgroundSave();
-        if(window.notifyOtherTabs) window.notifyOtherTabs();
         renderAdminSaturdayTimes();
     }
+    function handleSaturdayDragEnd(e) {
+        draggedSaturdayIndex = null;
+        document.querySelectorAll('#admin-saturday-times-container .admin-item-row').forEach(el => el.classList.remove('dragging'));
+    }
+    function addSaturdayTime() { state.shabbat.saturday.push({ event: "שיעור חדש", time: "00:00" }); backgroundSave(); renderAdminSaturdayTimes(); }
+    function removeSaturdayTime(i) { state.shabbat.saturday.splice(i, 1); backgroundSave(); renderAdminSaturdayTimes(); }
 
-    function removeSaturdayTime(i) {
-        state.shabbat.saturday.splice(i, 1);
+    // גרירה ושחרור - תמונות בתוך פינה מותאמת
+    let draggedImageSlideIdx = null;
+    let draggedImageImgIdx = null;
+
+    function handleImageDragStart(e, sIdx, imgIdx) {
+        draggedImageSlideIdx = sIdx;
+        draggedImageImgIdx = imgIdx;
+        e.currentTarget.classList.add('dragging');
+    }
+    function handleImageDragOver(e) { e.preventDefault(); }
+    function handleImageDrop(e, sIdx, targetImgIdx) {
+        e.preventDefault();
+        if (draggedImageSlideIdx !== sIdx || draggedImageImgIdx === null || draggedImageImgIdx === targetImgIdx) return;
+        let imagesArr = state.slidesSequence[sIdx].images;
+        const movedImg = imagesArr.splice(draggedImageImgIdx, 1)[0];
+        imagesArr.splice(targetImgIdx, 0, movedImg);
+        draggedImageSlideIdx = null;
+        draggedImageImgIdx = null;
         backgroundSave();
-        if(window.notifyOtherTabs) window.notifyOtherTabs();
-        renderAdminSaturdayTimes();
+        renderAdminSlidesSequence();
+    }
+    function handleImageDragEnd(e) {
+        draggedImageSlideIdx = null;
+        draggedImageImgIdx = null;
+        document.querySelectorAll('.img-thumb-row').forEach(el => el.classList.remove('dragging'));
     }
 
     function renderAdminSlidesSequence() {
-        const container = document.getElementById('admin-slides-sequence-container');
-        
-        let customSlidesList = [];
-        state.slidesSequence.forEach((sItem, sIdx) => {
-            if (sItem.type === 'custom') {
-                customSlidesList.push({ index: sIdx, title: sItem.title || `פינה ${sIdx + 1}` });
-            }
-        });
-
-        container.innerHTML = state.slidesSequence.map((item, i) => {
-            let headerTitle = '';
-            let borderColor = '#2b6cb0';
-            if (item.type === 'weekday') {
-                headerTitle = '📅 מסך תפילות יום חול';
-                borderColor = '#2b6cb0';
-            } else if (item.type === 'shabbat') {
-                headerTitle = '🕯️ מסך זמני שבת קודש';
-                borderColor = '#d69e2e';
-            } else if (item.type === 'custom') {
-                headerTitle = '🖼️ פינת תמונות מותאמת';
-                borderColor = '#319795';
-            }
-
-            let imagesList = item.images || [];
-
-            return `
-            <div class="custom-slide-box" draggable="true" data-index="${i}" 
-                 ondragstart="onDragStart(event)" ondragover="onDragOver(event)" ondrop="onDrop(event, ${i})" ondragend="onDragEnd(event)"
-                 style="border-right: 4px solid ${borderColor};">
-                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:${item.type === 'custom' ? '10px' : '0'};">
-                    <strong>⠿ ${headerTitle}</strong>
-                    <div>
-                        <button class="btn-action" style="margin:0; background:#e53e3e;" onclick="removeSlideFromSequence(${i})">🗑️ מחיקה</button>
-                    </div>
+        document.getElementById('admin-slides-sequence-container').innerHTML = state.slidesSequence.map((item, i) => `
+            <div class="custom-slide-box">
+                <div style="display:flex; justify-content:space-between; align-items:center;">
+                    <strong>${item.type === 'weekday' ? '📅 מסך ימי חול' : item.type === 'shabbat' ? '🕯️ מסך שבת' : '🖼️ פינת תמונות'}</strong>
+                    <button class="btn-action" style="background:#e53e3e; margin:0;" onclick="removeSlideFromSequence(${i})">🗑️ מחיקה</button>
                 </div>
                 ${item.type === 'custom' ? `
-                    <div class="form-group" style="margin-top:8px;">
-                        <label>כותרת הפינה:</label>
-                        <input type="text" value="${item.title || ''}" onchange="state.slidesSequence[${i}].title = this.value; backgroundSave(); if(window.notifyOtherTabs) window.notifyOtherTabs();">
-                    </div>
-                    <div class="form-group">
-                        <label>הוסף תמונות לפינה (ניתן לבחור כמה תמונות יחד במסך הבחירה):</label>
-                        <input type="file" accept="image/*" multiple onchange="handleImageUpload(event, ${i})">
-                    </div>
-                    <div>
-                        ${imagesList.map((img, imgIdx) => `
-                            <div class="img-thumb-row">
-                                <div style="display: flex; align-items: center; gap: 10px; flex: 1;">
-                                    <img src="${img}" class="thumb-preview" alt="תצוגה מקדימה">
-                                    <span style="font-size: 0.9rem; font-weight: bold;">תמונה ${imgIdx + 1}</span>
-                                </div>
-                                <div style="display: flex; align-items: center; gap: 5px;">
-                                    <div style="display: flex; align-items: center; gap: 4px;">
-                                        <label style="font-size: 0.8rem; margin:0;">העבר למקום:</label>
-                                        <select style="padding: 4px; font-size: 0.85rem; border-radius: 4px; width: 65px;" onchange="reorderImageWithinSlide(${i}, ${imgIdx}, parseInt(this.value))">
-                                            ${imagesList.map((_, targetIdx) => `<option value="${targetIdx}" ${targetIdx === imgIdx ? 'selected' : ''}>${targetIdx + 1}</option>`).join('')}
-                                        </select>
-                                    </div>
-
-                                    <select style="padding: 4px; font-size: 0.85rem; border-radius: 4px; width: 110px;" onchange="moveImageToAnotherSlide(${i}, ${imgIdx}, parseInt(this.value))">
-                                        <option value="" disabled selected>העבר לפינה...</option>
-                                        ${customSlidesList.map(cs => `<option value="${cs.index}">${cs.title}</option>`).join('')}
-                                    </select>
-
-                                    <button class="btn-action" style="margin:0; background:#e53e3e; padding: 4px 10px;" onclick="removeCustomImage(${i}, ${imgIdx})">🗑️</button>
-                                </div>
-                            </div>
-                        `).join('')}
-                    </div>
+                    <div class="form-group" style="margin-top:8px;"><label>כותרת:</label><input type="text" value="${item.title || ''}" onchange="state.slidesSequence[${i}].title = this.value; backgroundSave();"></div>
+                    <div class="form-group"><label>העלאת תמונות:</label><input type="file" accept="image/*" multiple onchange="handleImageUpload(event, ${i})"></div>
+                    <div style="margin-top: 5px;"><small style="color: #4a5568; font-weight: bold;">ניתן לגרור את התמונות לסדר מחדש (☰):</small></div>
+                    <div style="margin-top: 5px;">${(item.images || []).map((img, imgIdx) => `
+                        <div class="img-thumb-row" draggable="true" ondragstart="handleImageDragStart(event, ${i}, ${imgIdx})" ondragover="handleImageDragOver(event)" ondrop="handleImageDrop(event, ${i}, ${imgIdx})" ondragend="handleImageDragEnd(event)">
+                            <span class="drag-handle" title="גרור לשינוי סדר">☰</span>
+                            <img src="${img}" class="thumb-preview">
+                            <span style="flex:1;">תמונה ${imgIdx + 1}</span>
+                            <button class="btn-action" style="background:#e53e3e; margin:0;" onclick="removeCustomImage(${i}, ${imgIdx})">🗑️</button>
+                        </div>`).join('')}</div>
                 ` : ''}
-            </div>`;
-        }).join('');
+            </div>
+        `).join('');
     }
 
-    let draggedIndex = null;
-    function onDragStart(e) {
-        draggedIndex = parseInt(e.currentTarget.getAttribute('data-index'));
-        e.currentTarget.classList.add('dragging');
-    }
-    function onDragOver(e) {
-        e.preventDefault();
-    }
-    function onDrop(e, targetIndex) {
-        e.preventDefault();
-        if (draggedIndex === null || draggedIndex === targetIndex) return;
-        const movedItem = state.slidesSequence.splice(draggedIndex, 1)[0];
-        state.slidesSequence.splice(targetIndex, 0, movedItem);
-        draggedIndex = null;
-        backgroundSave();
-        if(window.notifyOtherTabs) window.notifyOtherTabs();
-        renderAdminSlidesSequence();
-    }
-    function onDragEnd(e) {
-        e.currentTarget.classList.remove('dragging');
-        draggedIndex = null;
-    }
-
-    async function handleImageUpload(event, slideIndex) {
-        const files = event.target.files;
-        if (!files || files.length === 0) return;
-
-        if (!state.slidesSequence[slideIndex].images) {
-            state.slidesSequence[slideIndex].images = [];
+    async function handleImageUpload(e, slideIdx) {
+        for (let file of e.target.files) {
+            let compressed = await compressImage(file, 1200, 0.6);
+            if (!state.slidesSequence[slideIdx].images) state.slidesSequence[slideIdx].images = [];
+            state.slidesSequence[slideIdx].images.push(compressed);
         }
-
-        for (let file of files) {
-            try {
-                const compressedBase64 = await compressImage(file, 800, 0.50);
-                state.slidesSequence[slideIndex].images.push(compressedBase64);
-            } catch(e) {
-                console.error("שגיאה בדחיסת התמונה", e);
-            }
-        }
-
-        event.target.value = '';
-
+        e.target.value = '';
         backgroundSave();
-        if(window.notifyOtherTabs) window.notifyOtherTabs();
         renderAdminSlidesSequence();
     }
 
-    function removeCustomImage(slideIndex, imgIndex) {
-        state.slidesSequence[slideIndex].images.splice(imgIndex, 1);
+    function removeCustomImage(sIdx, imgIdx) {
+        state.slidesSequence[sIdx].images.splice(imgIdx, 1);
         backgroundSave();
-        if(window.notifyOtherTabs) window.notifyOtherTabs();
-        renderAdminSlidesSequence();
-    }
-
-    function reorderImageWithinSlide(slideIndex, fromIdx, toIdx) {
-        if (isNaN(toIdx) || fromIdx === toIdx) return;
-        const images = state.slidesSequence[slideIndex].images;
-        const imageToMove = images.splice(fromIdx, 1)[0];
-        images.splice(toIdx, 0, imageToMove);
-
-        backgroundSave();
-        if(window.notifyOtherTabs) window.notifyOtherTabs();
-        renderAdminSlidesSequence();
-    }
-
-    function moveImageToAnotherSlide(fromSlideIdx, imgIdx, toSlideIdx) {
-        if (isNaN(toSlideIdx) || fromSlideIdx === toSlideIdx) return;
-        
-        const imageToMove = state.slidesSequence[fromSlideIdx].images[imgIdx];
-        state.slidesSequence[fromSlideIdx].images.splice(imgIdx, 1);
-
-        if (!state.slidesSequence[toSlideIdx].images) {
-            state.slidesSequence[toSlideIdx].images = [];
-        }
-        state.slidesSequence[toSlideIdx].images.push(imageToMove);
-
-        backgroundSave();
-        if(window.notifyOtherTabs) window.notifyOtherTabs();
         renderAdminSlidesSequence();
     }
 
     function addCustomSlide() {
-        state.slidesSequence.push({
-            uniqueId: Date.now(),
-            type: 'custom',
-            title: "פינה חדשה",
-            fontSize: "2.3rem",
-            fontColor: "#1a365d",
-            images: []
-        });
+        state.slidesSequence.push({ uniqueId: Date.now(), type: 'custom', title: "פינה חדשה", images: [] });
         backgroundSave();
-        if(window.notifyOtherTabs) window.notifyOtherTabs();
         renderAdminSlidesSequence();
     }
 
     function duplicateSlideType(type) {
-        state.slidesSequence.push({
-            uniqueId: Date.now(),
-            type: type
-        });
+        state.slidesSequence.push({ uniqueId: Date.now(), type: type });
         backgroundSave();
-        if(window.notifyOtherTabs) window.notifyOtherTabs();
         renderAdminSlidesSequence();
     }
 
-    function removeSlideFromSequence(index) {
-        if (state.slidesSequence.length <= 1) {
-            alert("חייבת להישאר לפחות שקופית אחת בלוח!");
-            return;
-        }
-        state.slidesSequence.splice(index, 1);
+    function removeSlideFromSequence(i) {
+        if (state.slidesSequence.length <= 1) return alert("חייבת להישאר שקופית אחת לפחות!");
+        state.slidesSequence.splice(i, 1);
         backgroundSave();
-        if(window.notifyOtherTabs) window.notifyOtherTabs();
         renderAdminSlidesSequence();
     }
 
